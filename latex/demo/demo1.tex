@@ -1,0 +1,132 @@
+% hello.tex
+\documentclass[GBK,a4paper]{ctexrep}
+
+% for hyperlinks
+\usepackage{hyperref}
+\usepackage{url}
+% For figures
+\usepackage{graphicx}
+\usepackage{subfigure}
+% math packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsopn}
+\usepackage{ifthen}
+\usepackage{natbib}
+\usepackage{enumerate}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{fancyvrb}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{mindmap,trees}
+% for hyperlinks
+
+
+\begin{document}
+\hypersetup{CJKbookmarks=true}
+%����ժҪ
+\title{ȱ�缺陷检测����Ŀ����}
+\author{���� ���}
+\date{2019�� 6�� 26}
+\maketitle
+
+%ժҪ
+%\begin{abstract}
+%\end{abstract}
+
+%\chapter{ͼ������}
+%\usetikzlibrary{trees}
+%\part{�󽡿�}
+%\chapter{��Ŀ����˼ά��ͼ}
+
+\chapter{ͼ������}
+\section{˼ά��ͼ}
+
+\pagestyle{empty}
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}
+  \path[mindmap,concept color=black,text=white]
+    node[concept] {ͼ��������Ŀ}
+    [clockwise from=0]
+
+    % �ڵ�1
+    child[concept color=green!50!black] {
+      node[concept] {1.���ݲɼ�}
+      [clockwise from=90]
+      child { node[concept] {�����������������ͼ������ǩ} }
+      child { node[concept] {���ݵĴ���} }
+    }
+    % �ڵ�2
+    child[concept color=blue] {
+      node[concept] {2.����Ԥ����}
+      [clockwise from=30] % ��ת�ĽǶ�
+      child { node[concept] {����(resize)} }
+      child { node[concept] {��ת��ƽ��} }
+      child { node[concept] {��һ��(��̬�ֲ������ȷֲ�)}}
+    }
+    child[concept color=red] {
+      node[concept] {3.ģ��ѵ�}
+      [clockwise from=-60]
+      child [concept color=orange]{
+      node[concept] {a.ģ�ͽṹ}
+      [clockwise from=-30]
+      child { node[concept] {����ģ��} }
+      child { node[concept] {�ٶ�} }
+      child { node[concept] {����} }
+       }
+      child[concept color=orange]{
+      node[concept] {b.����}
+      [clockwise from=-100]
+      child { node[concept] {������ʼ��}}
+      child { node[concept] {ѧϰ��}}
+      child { node[concept] {weight decay}}
+      child { node[concept] {batchsize}}
+       }
+      child [concept color=orange]{
+       node[concept] {c.���ӷ������}
+       [clockwise from=-180]
+       child {node[concept]{�Ż���}}
+       child {node[concept]{Regularization}}
+       child {node[concept]{�������ݵ���������}}
+       }
+     }
+    child[concept color=orange] {
+    node[concept] {4.ģ��Ԥ��}
+    [clockwise from=90]
+    child {node[concept]{���ָ��(Accuracy/confusion matrix)}}
+    child {node[concept]{������/Ƿ����}}
+    };
+\end{tikzpicture}
+\end{figure}
+
+
+\begin{tikzpicture}[edge from parent fork right,grow=right,level distance=3cm,level 1/.style={sibling distance=4cm},
+level 2/.style={sibling distance=1cm}]
+\node[text width=1cm] {Idea General}
+child {node {Some idea}}
+child {node {Some idea}
+child {node {Details}}
+child {node {Details}}
+child {node {Details}}
+};
+\end{tikzpicture}
+%\chapter{�±���}
+��һ�������������Щ����
+
+%\section{�ڱ���}
+���ǵ�һ�ڷ���ģ��
+
+%\subsection{С�ڱ���}
+���ݲɼ�
+
+%\subsubsection{�ӽڱ���}
+�߷������ݼ�
+
+%\paragraph{�α���}
+���ݽ���
+%
+%\subparagraph{�Ӷα���}
+ÿ�������������
+\end{document}

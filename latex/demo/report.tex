@@ -1,0 +1,1144 @@
+\documentclass{article}
+
+%%%%%%%%%%%%%%%%%%% layout
+\usepackage{indentfirst}
+\setlength{\parindent}{2em}
+% We will use NIPS submission format
+\usepackage{../common/nips13submit_e,times}
+
+% for hyperlinks
+\usepackage{hyperref}
+\usepackage{url}
+% For figures
+\usepackage{graphicx}
+\usepackage{subfigure}
+
+% For gif
+\usepackage{animate}
+\usepackage{pgfplots}
+
+% for flow-figures
+\usepackage{palatino}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+
+% math packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsopn}
+\usepackage{ifthen}
+\usepackage{natbib}
+\usepackage{enumerate}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{fancyvrb}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage[utf8]{inputenc}
+\usepackage[top=3cm,bottom=3cm,right=3cm,left=3cm]{geometry}
+
+\usepackage{CJKutf8}
+\input{../common/definitions}
+
+%%%%%%%%%%%%%%%%%%% configure note.
+\usepackage[textwidth=2.5cm]{todonotes}
+\newcommand{\tao}[1]{\todo[color=red!20,size=\footnotesize]{T: #1}{}}
+\newcommand{\feng}[1]{\todo[color=blue!20,size=\footnotesize]{F: #1}{}}
+
+%%%%%%%%%%%%%%%%%%% highlight something.
+\usepackage{xcolor}
+\usepackage{soul}
+\newcommand{\mathcolorbox}[2]{\colorbox{#1}{$\displaystyle #2$}}
+\newcommand{\hlfancy}[2]{\sethlcolor{#1}\hl{#2}}
+
+%%%%%%%%%%%%%%%%%%% begin the document.
+\nipsfinalcopy
+\begin{document}
+\begin{CJK}{UTF8}{gbsn}
+
+\title{机器视觉速查手册}
+\date{\today}
+\author{刘俊峰}
+\maketitle
+
+% abstract
+\begin{abstract}
+    该手册主要记录机器视觉中检测任务的常用评价指标和经典检测模型，
+    检测模型主要包括2013-2019近六年以来的检测框架演变，优劣势探讨以及模型的设计思路等。
+    评价指标主要阐述其数学含义(公式表达)和具体业务场景中的应用。
+    通过该手册的简历达到内部员工对于模型设计思路更深入的了解，为之后的模型开发打下坚实的基础。
+    同时也方便相关部门和新加入同事更快了解和开展业务。
+\end{abstract}
+\section{Metric 评价指标}
+\subsection{分类模型常用评价指标}
+
+\subsubsection{Confusion Matric 混淆矩阵}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|l|c|}
+    \hline
+    \multicolumn{2}{|l|}{\multirow{2}{*}{confusion matrix}}                                                              & \multicolumn{2}{c|}{predicted condition}                                                                                                                                        \\ \cline{3-4} 
+    \multicolumn{2}{|l|}{}                                                                                               & prediction positive                                                                              & \multicolumn{1}{l|}{prediction negative}                                     \\ \hline
+    \multicolumn{1}{|c|}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}true\\ condition\end{tabular}}} & condition positive & true positive(TP)                                                                                & \begin{tabular}[c]{@{}c@{}}false negative(FN)\\ (type $||$ error)\end{tabular} \\ \cline{2-4} 
+    \multicolumn{1}{|c|}{}                                                                          & condition negative & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}false positive(FP)\\ (type $|$ error)\end{tabular}} & true negative(TN)                                                            \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Accuracy 准确率\\}
+    \begin{equation}
+        Accuracy \ = \ \frac{TP+TN}{TP+TN+FP+FN}
+    \end{equation}
+    
+\hypertarget{precession}{}
+\subsubsection{Precision 精确率}
+    \begin{equation}
+        Precision \ = \ \frac{TP}{TP+FP}
+    \end{equation}
+
+\hypertarget{recall}{}
+\subsubsection{Recall 召回率}
+    \begin{equation}
+        Recall \ = \ \frac{TP}{TP+FN}
+    \end{equation}
+\subsubsection{F1指标}
+    \begin{equation}
+        F1\ measure\ = \ \frac{2}{\frac{1}{Precision}+\frac{1}{Recall}}
+    \end{equation}
+用一个具体的例子说明：
+假设我们在数据集上训练了一个识别猫的模型，测试集包含100个样本，其中猫60张，另外40张为小狗。
+测试结果显示为猫的一共有52张图片，其中确实为猫的共50张，也就是有10张猫咪没有被模型检测出来，
+而且在检测结果中有2张为误检。我们更关注猫的检测情况，所以这里将猫认为是正类：\\
+所以TP=50，TN=38，FN=10，FP=2，Precision=50/52，Recall=50/60，Accuracy=(50+38)/(50+38+10+2)\\
+
+\subsection{检测模型常用指标}
+
+\subsubsection{MAP}
+图像分类任务通常用accuracy来衡量模型的准确率，对于目标检测任务，
+比如测试集上的所有图片一共有1000个object（这里的object不是图片的数量，因为一张图片中可能包含若干个object），
+两个模型都正确检测出了900个object（IOU$>$规定的阈值）。与图像分类任务不同的是，
+目标检测因为可能出现重复检测的情况，所以不是一个n \ to\  n的问题。
+在上面的例子中也就不能简单用分类任务的accuracy来衡量模型性能，
+因为模型A有可能是预测了2000个结果才中了900个，而模型B可能只预测了1200个结果。
+模型B的性能显然要好于A。AP越高，说明检测失误越少。对于所有类别的AP求平均就得到mAP了。
+\subparagraph{计算方法\\}
+voc2007的计算方法：\\
+在计算AP时，首先要把结果按照置信度排序，公式如下：\\
+\begin{equation}
+    AP = \frac{1}{11}\sum r \in [0,0.1,...,1]Pinterp(r),\quad Pinterp(r)=max({r_i}) \quad r_i\ge r
+\end{equation}
+voc2010的计算方法：
+比起07年，10年以后的新方法是取所有真实的recall值，
+按照07年的方法得到所有recall/precision数据点以后，使用分段常数的数值积分
+计算recall/precision曲线下的面积；
+举一个例子具体说明：\\
+对于Aeroplane类别，我们有以下输出（BB表示Bounding Box序号，IOU$>$0.5时GT=1）：\\
+
+BB  \quad $|$ \quad confidence \quad $|$ \quad GT\\
+$--------------$\\
+BB1 \ \ \  $|$ \quad \quad 0.9 \quad \quad \quad $|$ \quad 1\\
+$--------------$\\
+% BB2 |  0.9       | 1\\
+BB2 \ \ \  $|$ \quad \quad 0.9 \quad \quad \quad $|$ \quad 1\\
+$--------------$\\
+% BB1 |  0.8       | 1
+BB1 \ \ \  $|$ \quad \quad 0.8 \quad \quad \quad $|$ \quad 1\\
+$--------------$\\
+% BB3 |  0.7       | 0
+BB3 \ \ \  $|$ \quad \quad 0.7 \quad \quad \quad $|$ \quad 0\\
+$--------------$\\
+% BB4 |  0.7       | 0
+BB4 \ \ \  $|$ \quad \quad 0.7 \quad \quad \quad $|$ \quad 0\\
+$--------------$\\
+% BB5 |  0.7       | 1
+BB5 \ \ \  $|$ \quad \quad 0.7 \quad \quad \quad $|$ \quad 1\\
+$--------------$\\
+% BB6 |  0.7       | 0
+BB6 \ \ \  $|$ \quad \quad 0.7 \quad \quad \quad $|$ \quad 0\\
+$--------------$\\
+% BB7 |  0.7       | 0
+BB7 \ \ \  $|$ \quad \quad 0.7 \quad \quad \quad $|$ \quad 0\\
+$--------------$\\
+% BB8 |  0.7       | 1
+BB8 \ \ \  $|$ \quad \quad 0.7 \quad \quad \quad $|$ \quad 1\\
+$--------------$\\
+% BB9 |  0.7       | 1
+BB9 \ \ \  $|$ \quad \quad 0.7 \quad \quad \quad $|$ \quad 1\\
+$--------------$\\
+因此，我们有 TP=5 (BB1, BB2, BB5, BB8, BB9), FP=5 (重复检测到的BB1也算FP)。
+除了表里检测到的5个GT以外，我们还有2个GT没被检测到，因此: FN = 2.
+ 这时我们就可以按照Confidence的顺序给出各处的PR值，如下：
+
+rank=1 \quad  precision=1.00\  and\  recall=0.14\\
+$------------------$\\
+rank=2 \quad precision=1.00\  and\  recall=0.29\\
+$------------------$\\
+rank=3 \quad precision=0.66\  and\  recall=0.29\\
+$------------------$\\
+rank=4 \quad precision=0.50\  and\  recall=0.29\\
+$------------------$\\
+rank=5 \quad precision=0.40\  and\  recall=0.29\\
+$------------------$\\
+rank=6 \quad precision=0.50\  and\  recall=0.43\\
+$------------------$\\
+rank=7 \quad precision=0.43\  and\  recall=0.43\\
+$------------------$\\
+rank=8 \quad precision=0.38\  and\  recall=0.43\\
+$------------------$\\
+rank=9 \quad precision=0.44\  and\  recall=0.57\\
+$------------------$\\
+rank=10 \ \ \  precision=0.50\  and\  recall=0.71\\
+$------------------$\\
+07年的方法：我们选取Recall $\ge${ 0, 0.1, ..., 1}的11处Percision的最大值：1, 1, 1, 0.5, 0.5, 0.5, 0.5, 0.5, 0, 0, 0。AP = 5.5/11 = 0.5\\
+VOC2010及以后的方法，对于Recall $\ge$ {0, 0.14, 0.29, 0.43, 0.57, 0.71, 1}，我们选取此时Percision的最大值：1, 1, 1, 0.5, 0.5, 0.5, 0。
+计算recall/precision下的面积：AP = (0.14-0)x1 + (0.29-0.14)x1 + (0.43-0.29)x0.5 + (0.57-0.43)x0.5 + (0.71-0.57)x0.5 + (1-0.71)x0 = 0.5\\
+计算出每个类别的AP以后，对于所有类别的AP取均值就得到mAP了
+\subsubsection{IOU}
+交并比(Intersection-over-Union),表示产生的候选框与标记框的重叠率。
+即他们的交集与并集的比值。IOU越高表示重叠率越高，模型的效果越好。在目标检测的NMS中也通过设置IOU的阈值
+过滤候选框。
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/IOU.png}
+    \caption{IOU}
+    \label{IOU}
+\end{figure}
+\paragraph{计算公式：}
+\begin{equation}
+    IOU = \frac{area(C)\cap area(G)}{area(C)\cup area(G)}
+\end{equation}
+
+\subsubsection{Precession 精确率}
+\hyperlink{precession}{查看分类模型中的定义}
+
+\subsubsection{Recall 召回率}
+\hyperlink{recall}{查看分类模型中的定义}
+
+\section{图像分类}
+\subsection{Lenet}
+\subsubsection{概要}
+\CJKindent
+传统机器学习在面对图像分类会有特征向量维度过高，损失图像的空间信息(会将三维扁平化处理成一维)。
+而BP神经网络面临增加隐藏节点容易参数剧增，造成过拟合以及对于多层网络容易陷入局部极小值等问题。
+图像分类开始转向共享参数的卷积神经网络。
+\subsubsection{模型结构}
+
+% \tao{Please reference your figure in the main text, e.g.,Figure~\ref{fig:lenet}}
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/lanet-5.png}
+    \caption{lenet-4}
+    \label{fig:lenet}
+\end{figure}
+% \tao{the naming of the figure is incorrect}
+% \tao{please fill the caption.}
+
+
+\subsubsection{优劣势}
+\paragraph{模型创新点}  
+\begin{itemize}
+\item maxpooling 获取图像中较强的特征，同时加速训练，反向传播期间可以获得更大的梯度
+\item 继承机器学习的优点，使用集成学习boosting+lenet4，多个输出结果相加(根据错误率更改单个模型置信度)
+\end{itemize}
+
+\paragraph{模型不足}
+\begin{itemize}
+\item 分类“灰度手写数字”，图像比较简单。当图像复杂时max-pooling会丧失过多的有效特征。故逐渐被avg-pooling代替
+\item 模型对于全连接层的神经元数目比较依赖，当神经元数目下降过快时，会起到降低模型效果的作用(一般不小上一层神经元的1/30)
+\end{itemize}
+
+\subsubsection{总结}
+开始提出使用卷积核共享参数来代替bp网络，发展阶段保留了集成学习boosting的学习方法。特点是变换全连接层提升准确率，采用低分辨率的灰度图像。
+
+
+\subsection{Alexnet}
+% \tao{the naming of the model? should be alexnet?}
+\subsubsection{概要}
+Alexnet是2012年ILSVRC的获奖者，在lenet的基础上增加网络深度和channels，利用更大的感受野(5*5 $\rightarrow$ 11*11)，来捕捉更加丰富和抽象的特征。开始利用多gpu多网络进行训练
+
+
+\subsubsection{模型结构}
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/alexnet.png}
+    \caption{Alexnet with two GPUs}
+    \label{fig:alexnet}
+\end{figure}
+
+\subsubsection{模型优劣势}
+\paragraph{模型创新点}
+\begin{itemize}
+\item 加入随机裁剪，水平翻转和PCA等数据增强手段来进行增加数据集的数量和多样化
+\item 加入dropout增强鲁棒性。取多个裁剪图像的预测结果均值作为最终结果
+\item relu替代tanh激活函数(计算量更小，梯度值更大，选择较小的lr能够防止大面积神经元死亡的现象)
+\item 引入lrn(局部响应归一化)： 加快模型收敛[增强局部神经元重要性] 公式表达如下:
+\begin{equation}
+    b_{x,y}^i = a_{x,y}^i / (k +\alpha \sum_{j=max(0,i-n/2)}^{min(N-1,i+n/2)} (a_{x,y}^i)^2)^\beta
+\end{equation}
+
+参数详解：
+    \begin{itemize}
+    \item i：代表下标，你要计算像素值的下标，从0计算起
+    \item j：平方累加索引，代表从j~i的像素值平方求和
+    \item x,y：像素的位置，公式中用不到
+    \item a：代表feature map里面的 i 对应像素的具体值
+    \item N：每个feature map里面最内层向量的列数
+    \item k， $\alpha$，n/2，$\beta$：超参数
+    \end{itemize}
+\end{itemize}
+% \tao{the detailed explanation of the equation should be more precise and should use math notation? e.g., the last item}
+
+
+\paragraph{模型不足}
+加入lrn使得局部数据均值为0，增强了局部神经元的权值，加快模型的收敛。同时一定程度上造成了每一层输入输出数据分布不一致的问题。
+该问题在之后的BN层得到很好的解决.
+
+
+\subsubsection{总结}
+模型结构向增加卷积深度和感受野(增加卷积核)发展，同时开始采用lrn，relu来加快模型收敛。使用数据增强，dropout增强模型鲁棒性。
+
+
+\subsection{ZFnet}
+\subsubsection{概要}
+ZFnet是2013年ILSVRC的获奖者。通过deconvnet的技术来逐层可视化卷积网络。使用Imagenet预训练的网络参数来进行微调，对Alexnet进行微调来达到模型效果的提升，下面主要讲解deconvnet的可视化技术。
+
+
+\subsubsection{模型结构Figure~\ref{fig:zfnet}}
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/zfnet.png}
+    \caption{ZFnet}
+    \label{fig:zfnet}
+\end{figure}
+
+
+% \subsubsection{网络的可视化\\}
+\subsubsection{deconvnet 可视化技术}
+% \tao{下面这几个段落在逻辑上是怎么关联的？无法"理解"这个章节}
+图Figure~\ref{fig:deconvnet}右边是正常的网络结构，左边是反向可视化网络的一个整体流程。
+% 图片中向上的箭头表示原网络的卷积，relu激活和Max \ pooling等一系列操作。
+% 通过Switchs的转换，deconvnet实现对应的每一层操作。如：Max \  pooling \rightarrow Max \ Unpooling
+每一个模块的可视化对应转换关系：Max pooling $\Rightarrow$近似逆池化Figure~\ref{fig:unpooling}，Relu激活函数转换后不变，
+卷积操作$\Rightarrow$转置卷积Figure~\ref{fig:unpooling}。下面会具体讲解每一个模块的可视化：
+% \tao{this part should be more precise; please add more details.}
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{./figures/deconvnet.png}
+    \caption{deconv 与原网络对比}
+    \label{fig:deconvnet}
+\end{figure}
+
+% \tao{下面指哪个图？}
+
+\paragraph{unpooling 近似逆池化}
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{./figures/unpooling.jpeg}
+    \caption{unpooling过程图}
+    \label{fig:unpooling}
+\end{figure}
+
+max-pooling操作是不可逆的，但是我们可以通过记录每个合并区域内的最大值的位置来获得近似逆，如上图Figure~\ref{fig:unpooling}所示。 
+% \tao{上图指哪个图}
+
+\paragraph{Relu激活函数}
+由于ReLU用作激活函数，因此ReLU将使所有值保持为正，而使负值变为零。在相反的操作中，我们只需要再次执行ReLU。
+
+\paragraph{Deconv 转置卷积} Figure~\ref{fig:deconv}
+正常的卷积是通过卷积核将图像宽高由大变小。而转置卷积是通过在特征图上面padding的方式来进行上采样。转置卷积
+又叫上采样和反卷积。图(b)空的空白处为padding的0。 
+% \tao{语言描述下？}
+
+\begin{figure}[!ht]
+    \centering
+    \subfigure[正常卷积]{
+        \includegraphics[width=0.3\textwidth,]{./figures/deconv1_1.png}
+        \label{fig:deconv1_1}
+    }
+    \hfill
+    \subfigure[转置卷积]{
+        \includegraphics[width=0.3\textwidth,]{./figures/deconv2_1.png}
+        \label{fig:deconv2_1}
+    }
+    \caption{正常卷积和转置卷积}
+    \label{fig:deconv}
+\end{figure}
+
+% \tao{修改caption}
+
+
+\subsubsection{总结}
+可视化卷积特征对于深度学习的可解释性提供了思路，也为模型改进提供了有力途径。
+
+
+\subsection{VGG + SPPnet}
+\subsubsection{概要}
+在这里主要简述VGGnet和SPPnet，简述并不意味着不重要，
+而是考虑到15年之前网络对于现在的研究意义不是很大。
+下面会重点提出网络中经典的改进和摒弃的一些方法。
+
+
+\subsubsection{模型结构}
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/vgg.png}
+    \caption{VGG系列对比图}
+    \label{fig:vgg}
+\end{figure}
+% \tao{修改caption}
+
+
+\subsubsection{模型优劣势}
+\paragraph{模型创新点}
+\begin{itemize}
+\item VGG网络提出两个3*3卷积核替代5*5和7*7卷积核，在不降低感受野的同时大幅度降低参数
+
+    \begin{figure}[!h]
+        \centering
+        \includegraphics[width=0.8\textwidth]{./figures/3-kernel.png}
+        \caption{3*3和5*5的卷积核}
+        \label{fig:3-kernel}
+    \end{figure}
+    % \tao{修改caption}
+
+\item VGG网络对于多尺度训练，缩放图像的小尺寸等于256到512的范围，即S = [256; 512]，然后裁剪为224×224。因此，对于一系列S，我们将不同的缩放对象输入网络进行训练。
+测试时采用密集采样将概率向量相加或者平均来获取更好的结果
+
+    \begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/multitrain.png}
+    \caption{多尺度训练}
+    \label{fig:multitrain}
+    \end{figure}
+    % \tao{修改caption}
+
+\end{itemize}
+
+
+\paragraph{模型的不足}
+\begin{itemize}
+\item 模型的结构设计导致模型的深度有限，在vgg-16到vgg-19的时候，错误率没有降低反而增加
+\item VGG-11（LRN）获得10.5％的错误率。通过比较VGG-11和VGG-11(LRN)，错误率没有改善，这意味着LRN没有用。实际上，稍后在深度学习网络中不再使用LRN，而是使用批量归一化(BN)。
+\end{itemize}
+
+关于SPPnet提出的空间金字塔池化在检测模型中有详细的介绍。具体请参见Section~\ref{}.
+    
+
+\subsubsection{总结}
+从Lenet到SPPnet，分类网络的准确率和效率有大幅度提升。模型从数据增强，网络加深，
+多尺度特征的融合来提升分类精度，从降低感受野，使用relu激活函数以及dropout来提升模型速度和鲁棒性。
+之后的网络则从多方位的特征融合，解决更深网络梯度弥散问题和注意力机制等方面来提升网络。
+
+
+\subsection{Prelunet+DeepImage}
+% \tao{Prelunet+DeepImage的区别在哪里？能否简述？}
+\subsubsection{概要}
+% 这两个网络放在一起来讲是因为网络的本身并没有发生太大的变化，
+% 而是在激活函数，权重的初始化和数据并行计算和数据增强来做文章。
+% 尤其是百度的DeepImage在并行计算和数据增强方面为深度学习做了更深入的开发。
+这两个网络没有在网络的结构部分做改进，而是从改进激活函数(Prelunet)和数据并行计算(DeepImage)
+实现对网络的提升。Prelunet将relu改进为prelu的同时，也给出了prelu对应的权重初始化，两者结合模型效果
+更好。DeepImage不仅使用了超级计算机实现数据的并行计算，还使用了图像拉伸,图像转换等多种数据增强的
+方法。
+
+\subsubsection{模块详细讲解}
+% \tao{这一个章节的逻辑在哪里？能否有个综述？}
+\paragraph{Prelunet中做的改进}
+\begin{itemize}
+    \item Prelu激活函数:如图Figure~\ref{fig:prelu}Prelu认为对负值应该有惩罚，他应该是可训练的参数，当a = 0时，它是Relu，
+    当a = 0.01时，它是Leaky Relu，如果a时可训练的参数，则是Prelu
+    \begin{figure}[!h]
+        \centering
+        \includegraphics[width=0.8\textwidth]{./figures/prelu.png}
+        \caption{Relu and prelu}
+        \label{fig:prelu}
+    \end{figure}
+    \item Prelu对应的权重初始化:
+    \begin{equation}
+        Var[y_L] = Var[y_1](\prod_{i=2}^N 1/2n_lVar[w_l]) \qquad \qquad  1/2n_lVar[w_l] = 1 \qquad \forall l
+    \end{equation}
+    第L层的变化(左)和充分条件(右).
+    如果满足右侧的充分条件，则网络可以变得稳定，因此，最后权重的初始化方差为2/nl，其中nl是第l层中的权重
+    的输入通道和输出通道的乘积即$\text{std}=in\_channels \times out\_channels$。下图Figure~\ref{fig:preluinit}是不同网络深度下
+    该权重初始化和xavier初始化的对比。实验结果来看22层的网络建议的初始化要比Xavier初始化收敛的更快，当网络深度
+    加深到30层时，Xavier初始化出现不收敛的情况。
+    \begin{figure}[!h]
+        \centering
+        \includegraphics[width=0.8\textwidth]{./figures/prelu-init.png}
+        \caption{Red(Ours) and Bile(Xavier) 22-layer(Left) and 30-layer(Right)}
+        \label{fig:preluinit}
+    \end{figure}
+    
+\end{itemize}
+
+
+
+
+
+\paragraph{DeepImage做的改进}
+\begin{itemize}
+\item 数据增强Figure~\ref{fig:data-argument}\\
+1\ 图像转换：从-20到+20的随机数添加到R,G,B通道。\\
+2\ 渐晕：是图像的外围更暗，具有两个随机参数来添加区域噪音值，以及减少多少亮度。\\
+3\ 水平和垂直拉伸以及传统的旋转，翻转和裁剪\\
+\item 并行计算\\
+采用定制的超级计算机Minwa，具有36个服务器节点。每个节点有2个六核Intel Xeon E5-2620 CPU处理器，
+4个Nvidia Tesla K40m GPU，每个具有12G内存，以及1个FDR InfiniBand，可提供56GB/s互连数据速度。
+使用32个GPU来并行训练模型,具体表现如Figure~\ref{fig:32-gpu}.\\
+每个GPU负责1/N小批量。在反向传播期间所有GPU都根据本地训练数据计算梯度，
+然后交换梯度并更新权重的本地副本，如Figure~\ref{fig:parallel-gpu} 所示：
+\end{itemize}
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{./figures/data-argument.png}
+    \caption{}
+    \label{fig:data-argument}
+\end{figure}
+
+
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{./figures/32-gpu.png}
+    \caption{}
+    \label{fig:32-gpu}
+\end{figure}
+
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/parallel-gpu.png}
+    \caption{}
+    \label{fig:parallel-gpu}
+\end{figure}
+
+
+\subsubsection{总结}
+    相比对于网络的改动，以上网络主要在关注网络细节部分和硬件的大幅度提升来提高模型的效果。
+    数据集的多样化，鲁棒的模型以及多GPU等硬件提升成为深度学习的三个考虑方向。
+
+
+\subsection{Inception 系列}
+\subsubsection{Inception-v1}
+\paragraph{概要}
+Inception v1的网络，主要提出了Inceptionmodule结构（$1 \times 1$，$3 \times 3$，$5 \times 5$的conv和$3 \times 3$的pooling组合在一起），
+最大的亮点就是从NIN（Network in Network）中引入了 $1 \times 1$ conv，结构如下Figure~\ref{fig:inceptionmodule}所示。代表作为GoogleNet。
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/inceptionmodule.jpg}
+    \caption{}
+    \label{fig:inceptionmodule}
+\end{figure}
+
+假设previous layer的大小为$28 \times 28 \times 192$，
+\begin{itemize}
+    \item 图a的weights大小为，$1 \times 1 \times 192 \times 64 + 3 \times 3 \times 192 \times 128 + 5 \times 5 \times 192 \times 32=387072$
+    \item 图a的输出feature map大小为，$28 \times 28 \times 64 + 28 \times 28 \times 128 + 28 \times 28 \times 32 + 28 \times 28 \times 192 = 28 \times 28 \times 416$
+    \item 图b的weights大小为, $1 \times 1 \times 192 \times 64 + 
+        (1 \times 1 \times 192 \times 96 + 3 \times 3 \times 96 \times 128) + 
+        (1 \times 1 \times 192 \times 16 + 5 \times 5 \times 16 \times 32) + 1 \times 1 \times 192 \times 32=163328$.
+    \item 图b的输出feature map大小为，$28 \times 28 \times 64 + 28 \times 28 \times 128 + 28 \times 28 \times 32 + 28 \times 28 \times 32 = 28 \times 28 \times 256$
+\end{itemize}
+写到这里，不禁感慨天才般的$1 \times 1$ conv，从上面的数据可以看出一方面减少了weights，另一方面降低了dimension。
+
+
+\paragraph{模型结构：}
+    \href{https://img-blog.csdn.net/20160904161917654}{inception structure}
+
+
+\paragraph{模型创新点}
+\begin{itemize}
+\item 增加了网络的深度和宽度
+\item 同时使用了$1 \times 1, 3 \times 3, 5 \times 5$的卷积，增加了网络对尺度的适应性
+\item 卷积层共有的一个功能，可以实现通道方向的降维和增维，至于是降还是增，取决于卷积层的通道数（滤波器个数），在Inception v1中$1 \times 1$卷积用于降维，减少weights大小和feature map维度。
+\item $1\times 1$卷积特有的功能，由于1*1卷积只有一个参数，相当于对原始feature map做了一个scale，并且这个scale还是训练学出来的，无疑会对识别精度有提升。
+\item 整个网络为了保证收敛，有3个loss。一定程度上能够缓解梯度消失，作者提出还能够起到正则化的作用
+\end{itemize}
+
+\subsubsection{Inception-v2}
+    该网络重点讲解batch-normalization，Inception-v2又称BN-inception。可见该模块的重要性
+
+
+\paragraph{为什么我们需要批量标准化（BN）？}
+输入$X$乘以权重$W$再加上偏置项$b$，通过激活函数F得到$Y:= F(WX + b)$.
+
+% \tao{what is $S$ function? }
+以前，$F$是$Sigmoid$形函数，梯度值在[-$\infty$,-4][4,$\infty$]这两个区间内的梯度接近0。随着网络深度的增加，这种影响被放大，从而降低了训练速度。
+将ReLU用作F，其中$ReLU(x)=max(x, 0)$，以解决饱和问题和由此产生的消失梯度。但是对初始化和学习率的设置比较敏感。
+% \tao{the sentece here does not make sense}
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width = 0.8\textwidth]{figures/BN.png}
+    \caption{没有BN(左),有BN(右)}
+    \label{fig:bn}
+\end{figure}
+
+
+上述图Figure~\ref{fig:bn}的左侧是没有BN层的，特征各个维度的方差不一致导致梯度更新次数多，训练时间长。图的右侧
+是BN层处理之后各个维度的方差一致，能到更快到达全局最优点。$X$的分布随时间保持固定是有利的，因为当网络变深时，小的变化将被放大。
+BN可以减小梯度对参数尺度或其初始值的依赖性。结果是:
+\begin{itemize}
+\item 可以使用更高的学习率
+\item 可以减少对Dropout的需求
+\item 打乱输入数据的顺序经过BN层后会增加数据的多样化，从而增强模型的鲁棒性
+\item 详细公式讲解:
+    \begin{equation}
+        input \quad data: X = {x_i...x_m},parameters \quad to \quad be \quad learned: \gamma,\beta 
+    \end{equation}
+    \begin{equation}
+        \mu X \Leftarrow  \tfrac{1}{m} \sum_{i=1}^m x_i  \qquad  //mini-batch \quad mean 
+    \end{equation}
+
+    \begin{equation}
+        \sigma^2 X \Leftarrow  \tfrac{1}{m} \sum_{i=1}^m (x_i-\mu X)^2  \qquad  //mini-batch \quad variance 
+    \end{equation}
+
+    \begin{equation}
+        x_i^^ \Leftarrow  \frac{x_i-\mu X}{\sqrt{\sigma^2 X +\epsilon}}   \qquad  //normalize
+    \end{equation}
+
+    \begin{equation}
+        y_i \Leftarrow  \gamma x_i^^ + \beta  == BN_\gamma,_\beta(x_i)  \qquad  //scale \quad and \quad shift
+    \end{equation}
+\end{itemize}
+
+
+\subsubsection{Inception-v3}
+\paragraph{网络创新点}
+\begin{itemize}
+    \item 非对称卷积，下图Figure~\ref{fig:dissymmetry-conv}是初始化模块的两种形式。使用$n$*1和1*$n$来代替$n$*$n$的卷积。例1*7和7*1的来代替7*7的卷积核。
+    通过分解可以降低整个网路的参数，不容易过拟合，同时还可以增加网络的深度。
+
+    \begin{figure}[!ht] 
+        \centering
+        \subfigure[卷积模块1]{
+            \includegraphics[width=0.4\textwidth,]{./figures/inception-v3-b.png}
+            \label{fig:deconv1_1}
+        }
+        \hfill
+        \subfigure[卷积模块2]{
+            \includegraphics[width=0.4\textwidth,]{./figures/inception-v3-c.png}
+            \label{fig:deconv2_1}
+        }
+        \caption{Inception \ Module}
+        \label{fig:dissymmetry-conv}
+    \end{figure}
+    \item 标签平滑: 使one-hot编码中为0的值变为很小的一个值，更符合真实的类别情景。其中$\epsilon$=0.1是超参数，K是分类的类别数。
+    \feng{这里博客中说实现正则化，我的理解是平滑是基于统计的一个概念
+    ，当大量的样本出现时，由于各种偶然因素的出现，导致样本出现的类别概率不是0和1怎么绝对，
+    标签平滑更能符合真实的数据分布。还请虫哥指点}
+    \begin{equation}
+        new\_label = (1-\epsilon) * one\_hot\_labels \ +\epsilon/k)
+    \end{equation}
+\end{itemize}
+
+
+\subsubsection{Inception-v4}
+\paragraph{模型亮点}
+Inception v4主要利用残差连接（Residual Connection）来改进v3结构，代表作为，
+Inception-ResNet-v1，Inception-ResNet-v2，Inception-v4
+resnet中的残差结构如下，这个结构设计的就很巧妙，
+使用原始层和经过2个卷基层的feature map做elementwise。
+Inception-ResNet的改进就是使用上文的Inception module (Figure~\ref{fig:dissymmetry-conv})
+来替换resnet shortcut中的conv+1*1 conv (如图Figure~\ref{fig:shortcut})。
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width = 0.2\textwidth]{figures/inception-v4.jpg}
+    \caption{resent shortcut}
+    \label{fig:shortcut}
+\end{figure}
+
+
+\subsubsection{总结}
+Inception系列基于原有模型的优点，将多特征进行融合成Inception\ module模块。在进行深度
+加深获取更抽象特征时，开创新的使用NiN，非对称卷积等来降低模型参数。使用BN层来保证每一层输出
+数据分布的一致性，加快模型收敛速度。最后也将残差思想有机的融合到模型中。
+
+\subsection{Resnet}
+\subsubsection{概要}
+网络发展的进程中提高模型的精度是首当其冲的，网络层数的加深是提高精度的重要发展方向。加深
+层数面临的问题是梯度消失和梯度爆炸的问题，过深的网络还会出现模型退化问题。下面主要讲解残差
+连接如何解决梯度消失和梯度爆炸问题(数学公式)以及残差连接的相应变形和发展。
+
+
+\subsubsection{模型结构}
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/resnet.png}
+    \caption{resnet-34}
+    \label{fig:resnet}
+\end{figure}
+
+
+\subsubsection{模型实现细节}
+\paragraph{梯度问题}
+由于深度学习中更新参数进行学习的核心是链式求导法则，当$n$个小于1的梯度相乘就会出现梯度消失
+的问题，$n$个大于1的梯度相乘就会出现梯度爆炸的问题。就会造成模型收敛速度过慢甚至会造成loss发散
+现在由于BN层和较小方差初始化，梯度消失出现的更多一点.
+
+
+\paragraph{残差连接}
+\begin{itemize}
+    \item 初始版本如图(Figure~\ref{fig:shortcut-1})，上文讲到网络层数加深后loss回传，
+    浅层的网络就会出现梯度消失和爆炸的现象。最终出现的是浅层网络基本没有得到训练，最后几层
+    网络基本占据整个网络的特征提取能力，深度网络也就丧失了他的意义。
+
+    基本的公式讲解：
+    \begin{itemize}
+        \item 前向传播
+        \begin{equation}
+            X_{l+1} = X_l + F(X_l,W_l) \qquad \text{one paricular layer}
+        \end{equation}
+        \begin{equation}
+            X_L = X_l + \sum_{i=1}^{L-1} F(X_i,W_i) \quad \text{L-layers from $1$-th layer}
+        \end{equation}
+        \item 反向传播: 根据求导公式我们发现无论网络有多深，等式右边的括号里面的部分对$x_i$的偏导数都是1，
+        这样无论网络有多深也不会出现梯度消失的现象。
+        \begin{equation}
+            \frac{\alpha\epsilon}{\alpha X_l} = \frac{\alpha\epsilon}{\alpha X_L}\frac{\alpha X_L}{\alpha X_l}
+             = \frac{\alpha\epsilon}{\alpha X_L}(1+\frac{\alpha}{\alpha X_l}\sum_{i=1}^{L-1}F(X_i,W_i)) 
+        \end{equation}
+        
+    \end{itemize}
+    
+    \item 如Figure~\ref{fig:shortcut-2}将NiN模块和残差连接融合，降低时间复杂度的同时也加深了网络的深度。
+    \begin{figure}[!h]
+        \centering
+        \subfigure[初始化版本]{
+            \includegraphics[width=0.45\textwidth]{figures/shortcut-1.png}
+            \label{fig:shortcut-1}
+        }
+        \hfill
+        \subfigure[升级版本1]{
+            \includegraphics[width=0.45\textwidth]{figures/shortcut-2.png}
+            \label{fig:shortcut-2}
+        }
+        \caption{残差连接}
+        \label{fig:shortcut-connection}
+    \end{figure}
+
+    \item 升级版本2，通过调整BN层和激活函数relu的位置更进一步缓解梯度消失的想象。如Figure~\ref{fig:shortcut-3}.
+    
+    公式讲解如下：
+    \begin{itemize}
+        \item 前向传播 
+        
+        对比下图Figure~\ref{fig:shortcut-3} 中左侧的(a)部分$X_{l+1}$对输入$X_l$
+        进行求偏导数，相比(b)部分会多出一个relu的链式求导，得出的偏导数是addition也就是BN的输出+$X_l$。
+        也就是公式中的$\lambda_i$。有反向传播公式得出如果$\lambda_i > 1$，梯度成指数增加会出现梯度爆炸的问题，
+        反之成指数减小会出现梯度消失的问题。(b)结构的$\lambda_i = 1$。这就是为什么由(a)结构变换成(b)结构
+        \feng{这一段博客上面只是写了公式，给了结论，没有很详细的讲。不知道我的理解对不对，还麻烦虫哥指正}
+        \begin{equation}
+            \lambda_l X_{l+1} = X_l + F(X_l,W_l) \qquad \text{one paricular layer}
+        \end{equation}
+        \begin{equation}
+            X_L = (\prod_{i=1}^{L-1}\lambda _i)X_l + \sum_{i=1}^{L-1} F(X_i,W_i) \quad \text{L-layers from $1$-th layer}
+        \end{equation}
+
+        \item 反向传播 
+        \begin{equation}
+            \frac{\alpha\epsilon}{\alpha X_l} = \frac{\alpha\epsilon}{\alpha X_L}\frac{\alpha X_L}{\alpha X_l}
+             = \frac{\alpha\epsilon}{\alpha X_L}((\prod_{i=1}{^L-1}\lambda _i)+\frac{\alpha}{\alpha X_l}\sum_{i=1}^{L-1}F(X_i,W_i)) 
+        \end{equation}
+    \end{itemize}
+
+    \begin{figure}[!h] 
+        \centering 
+        \includegraphics[width = 0.8\textwidth]{figures/shortcut-3.png} 
+        \caption{升级版本2} 
+        \label{fig:shortcut-3} 
+    \end{figure}
+\end{itemize}
+
+
+\subsubsection{总结}
+resnet通过经典的残差连接解决了深层网络梯度弥散的问题，又加上升级版本1的的设计能够使网络变得又深又准。此
+经典结构在之后的网络中影响深远，在应用阶段如果发现加深网络深度出现模型回退现象可以考虑加入该结构。之后
+再resnet的基础上又发展了RiR和RoR。RiR是并行的两个残差网络(residual stream, transient stream)，
+两条网络之间有信息的交汇。RoR是残差网络中的残差网络，顾名思义是残差模块的嵌套。这里暂时不做过多的讲解。
+
+
+\subsection{Mobilenet}
+\subsubsection{概要}
+随着深度学习的进步和不断成熟，各个行业都开始使用深度学习落地具体项目。但是神经网路的参数量大，算力
+要求高成为移动端，嵌入式芯片的痛点。下面讲解的网络使用深度分离卷积，大大降低参数量。能够达到移动端
+精度和速度的要求
+
+
+\subsubsection{模型结构Figure~\ref{fig:DW}}
+    \begin{figure}[!h]
+        \centering
+        \includegraphics[width=0.8\textwidth]{figures/DW.png}
+        \caption{Depthwise Separable Convolution}
+        \label{fig:DW}
+    \end{figure}
+
+
+\subsubsection{模型实现细节}
+\paragraph{深度可分离卷积参数详解}
+    \begin{itemize}
+        \item 通用公式：$D_K$表示卷积核大小，M表示输入数据channels，N表示输出数据channels
+        \begin{equation}
+            \text{Standard Convolution Cost} \qquad D_k \cdot D_k \cdot M \cdot N 
+        \end{equation}
+        \begin{equation}
+            \text{Depthwise Separable Convolution Cost} \qquad  D_k \cdot D_k \cdot M + 1 \cdot 1 \cdot M \cdot N 
+        \end{equation}
+        Thus, the computation reduction is
+        \begin{equation}
+            \frac{D_k \cdot D_k \cdot M + 1 \cdot 1 \cdot M \cdot N }{D_k \cdot D_k \cdot M \cdot N } = \frac{1}{N}+\frac{1}{D_k^2}
+        \end{equation}
+        \item 举例：输入通道为3，输出通道为256，使用3*3的卷积核进行卷积\\
+        \begin{itemize}
+            \item 标准卷积： 3*3*3*256 = 6912
+            \item 通道分离卷积： 3*3*3+3*1*1*256 = 795 \qquad 又把参数降低到九分之一！！！
+        \end{itemize}
+    \end{itemize}
+
+
+\subsubsection{总结}
+通过mobilenet的轻量级网络，能够使网络在更小的算力设备上运行。同时该网络也在机器视觉的其他领域，如检测，语义分割
+等领域得到了应用。也有一些网络对Pointwise Convolution 和 Depthwise Convolution 两个模块进行顺序
+的调整和删去relu激活函数来提升模型，如Xception.
+
+
+\subsection{Polynet}
+\subsubsection{概要}
+模型来自香港中文大学和SenseTime的Polynet，引入了一个名叫
+PolyInception的模块。Polynet是基于这些模块组成，与
+\href{https://towardsdatascience.com/review-inception-v4-evolved-from-googlenet-merged-with-resnet-idea-image-classification-5e8c339d18bc}{Inception-Resenet-v2}相比，
+Polynet将单一作物的top5误差率从4.9\%降低到4.25\%，将多作物的top5误差率从3.7\%降低到3.45%.
+
+
+\subsubsection{模块结构Figure~\ref{fig:PIM}}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/polyinception-module.png}
+    \caption{Polyinception-module}
+    \label{fig:PIM}
+\end{figure}
+
+
+\subsubsection{模块详情}
+    \begin{itemize}
+        \item PolyInception模块为了提高准确性，集成inception-module(Figure~\ref{fig:inceptionmodule})为子模块,
+        即添加多项式组合
+        \begin{equation}
+            (1+F+F^2)\cdot X:= X + F(X) + F(F(X))
+        \end{equation}
+        \item (a) poly-2: 第一条路径是残差连接，第二条路径是一阶的Inceptio模块。
+            第三条路径是二阶项，由两个Inception模块组成。
+        \item (b) poly-2: 对比(a)poly模块，第二路径和第三路径的F-inception进行
+            共享参数，这可以在不引入附加参数的增强下增加特征提取能力。可以理解为它是一种递归
+            神经网络，在二阶的路径上F-inception的输出再次返回到F-inception的输入，这变成$1+F+F^2$
+        \item (c) mpoly-2: 第二条路径和第三条路径共享参数F-inception，得到$1+F+GF$
+        \item (d) 2-way: 这是一个一阶的Polyinception，$1+F+G$
+        \item 通过这个概念我们可以扩展到更高阶的PolyInception模块，如poly-3($1+F+F^2+F^3$)等等。
+    \end{itemize}
+
+
+\subsubsection{总结}
+网络通过inception模块的二次集成，达到模型快速收敛的效果。在训练的过程中会有一定概率的将Polyinception模块
+进行丢弃，只保留残差的直连。能够加快模型的训练过程，也起到一定的正则化，其概念和原理与dropout类似。
+
+
+\subsection{Resnext}
+\subsubsection{概要}
+Resnext虽然是2016年的ILSVRC的亚军，但是开创性的提出Groupconv模块。和全连接把所有的信息考虑在内类似，
+卷积操作把所有的通道信息考虑在内，也可能是一种信息浪费。我们曾经了解过，
+不同的卷积参数会产生不同的卷积效果，因而在不同的通道中，最终的输出结果也有所不同。
+但是卷积参数比较有限，产生的输出结构难免会有一定的相关性，因此将这些相关的特征放在一起考虑，
+有时并不一定会产生更好的效果，反而可能会造成一定程度的过拟合。
+因此，在通道维度做局部化的考量也是一个不错的思路。
+
+
+\subsubsection{模块结构(Figure~\ref{fig:resnextM})}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{figures/resnext.png}
+        \caption{resnext-module}
+        \label{fig:resnextM}
+    \end{figure}
+
+
+\subsubsection{模块详解}
+    \begin{itemize}
+        \begin{figure}[!ht] 
+            \centering
+            \subfigure[简单神经元]{ \includegraphics[width=0.45\textwidth,]{./figures/BP.png} 
+            \label{fig:BP} } 
+            \hfill 
+            \subfigure[resnext模块]{ \includegraphics[width=0.45\textwidth,]{./figures/resnext-m.png} 
+            \label{fig:resnext-m} } 
+            \caption{简单神经元和resnext模块的对比} 
+            \label{fig:coontrast} 
+            \end{figure}
+        \item 重温简单神经元(Figure~\ref{fig:BP})
+            \begin{itemize}
+                我们应该知道，如上述的简单神经元，输出的是wi乘以xi的总和。上述操作
+                可以和重新组合成拆分，转换和聚合的过程。
+                \item 拆分：向量x被切分成低维嵌入，每一个是一维的子空间xi
+                \item 转换：转换低维表示，是对xi的一个缩放：wi*xi
+                \item 聚合：转换后的wi*xi通过求和来聚合
+            \end{itemize}
+        \item resnext中聚合转换(Figure~\ref{fig:resnext-m})
+            \begin{itemize}
+                \item 对比简单神经元网络，分组卷积扩增了一个新的维度cardinality.
+                在每一个path中代替简单神经网络的wi*xi的是一个非线性变换。cardinality
+                来控制path中非线性变换的数量
+            \end{itemize}
+    \end{itemize}
+
+
+\subsubsection{总结}
+resnext增加Groupconv的模块，通过cardinality来控制分组的数量。降低了模型参数量和特征通道间的相关性，
+也起到一定的正则化作用。但是在时间过程中，发现该模型的时间复杂度较高，训练周期长。猜测是因为因为模块中
+分组，聚合再相加耗费了时间。
+
+
+\subsection{Densenet}
+\subsubsection{概要}
+Densenet是2017年CVPR的论文，获得了2000多次引用的最佳论文。它由
+Cornwell University，清华大学和Facebook AI Research(FAIR)共同发明。
+与resnet相比，连接密集，参数更少，精度更高。
+
+
+\subsubsection{模型结构(Figure~\ref{fig:densenet})}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{figures/densenet.png}
+        \caption{densenet模型结构}
+        \label{fig:densenet}
+    \end{figure}
+
+
+\subsubsection{结构详解}
+    \begin{figure}[!ht] 
+        \centering 
+        \subfigure[残差连接图]{ \includegraphics[width=0.45\textwidth,]{./figures/densenet-1.png}
+        \label{fig:densenet-1} } 
+        \hfill 
+        \subfigure[特征累积图]{ \includegraphics[width=0.45\textwidth,]{./figures/densenet-2.PNG} 
+        \label{fig:densenet-2} } 
+        \caption{densenet} 
+        \label{fig:densenet-0} 
+    \end{figure}
+    \begin{itemize}
+        \item 模型的整个结构使用残差直连(Figure~\ref{fig:densenet-1})和特征concat的操作来组成整个densenet模型
+        \item 模型的优点
+        \begin{itemize}
+            \item 模型具有强梯度流，每一层的网络都会接收到前面所有层的输出，loss能够直接反向传播的梯度作用
+                    在浅层网络
+            \item 如图Figure~\ref{fig:resnet+densenet}对于每一层，Resnet中的参数数量与C*C成正比，而Densenet中的参数数量与l*k*k成正比.
+            由于$k \lll C$，所以Densenet的参数量比Resnet小得多.
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.8\textwidth]{figures/resnet+densenet.png}
+                \caption{参数量和计算效率}
+                \label{fig:resnet+densenet}
+            \end{figure}
+            \item 如图Figure~\ref{fig:multi-feature}，由于Densenet中的每一层
+                都接受前面所有层的输入，因此网络能够提取更丰富和多样化的特征信息.
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.8\textwidth]{figures/multifeatures.png}
+                \caption{提取多样化特征}
+                \label{fig:multi-feature}
+            \end{figure}
+        \end{itemize}
+    \end{itemize}
+
+
+\subsubsection{总结}
+作者使用残差直连的形式，使得每一层都获取丰富的特征。而且使用concat之前网络层的特征再进行
+低纬度的卷积，丰富特征融合的同时又降低模型参数，可谓一举两得。
+
+
+\subsection{CBAM}
+\subsubsection{概要}
+到此我们已经学习了近十几种经典的卷积网络结构，如resnet，resnext和Xception等等。
+发现残差连接可以加速模型收敛，增大宽度(cardinality)可以极大的降低模型参数，增强模型
+的特征表达能力。下面要介绍的网络模块从新的角度(注意力机制)来提升模型的效果，通俗来讲
+注意力机制是基于经典的网络基础上，在每一个block的channels和spatial进行加权，来增加
+模型对特征的约束和增强。
+\subsubsection{结构流程图}
+如图Figure~\ref{fig:CBAM}\ (a)中的FC是使用参数ratio，通过全连接进行降维[channels:channels/ratio]
+和升维[channels/ratio:channels]。然后将全局池化后的特征进行相加做sigmoid激活输出。\\
+图中\ (b)在特征的dim=3维度求最大值和均值，将两路的特征进行concat，最后卷积成channels=1的特征并做sigmoid激活。
+
+\thispagestyle{empty}
+% 流程图定义基本形状
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width = 2cm, minimum height=1cm,text centered, draw = black,fill=blue!50]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=1cm, minimum height=1cm, text centered, draw=black,fill=yellow!50]
+\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black,fill=orange]
+\tikzstyle{out} = [diamond, aspect = 3, text centered, draw=black]
+\tikzstyle{decision} = [circle, text centered, draw=black,fill=red!30]
+
+% 箭头形式
+\tikzstyle{arrow} = [->,>=stealth]
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=2cm]
+    \tikzstyle{beginend} = [rectangle,minimum width = 2cm,minimum height = 1cm,text centered, draw = white]
+    % nodes of CBAM
+    \node[beginend](begin){input\_feature};
+    \node[process,below of = begin,yshift=-1cm](attention1){channel\_attention\ref{fig:ca}};
+    \node[process,below of = attention1,yshift=-1cm](attention2){spatial\_attention\ref{fig:cf}};
+    \node[beginend,below of = attention2,yshift=-1cm](end){cbam\_feature};
+
+    % arrows of CABM
+    \draw [arrow] (begin) -- (attention1);
+    \draw [arrow] (attention1) --node[anchor=west]{output\_feature} (attention2);
+    \draw [arrow] (attention2) -- (end);
+    \end{tikzpicture}
+    \caption{CBAM \ module}
+    \label{fig:CBAM}
+\end{figure}
+
+% spatial attention and channel attention
+\begin{figure}[!ht] 
+    % \centering 
+    \subfigure[channel\_attention]{
+        \begin{tikzpicture}[node distance=2cm]
+
+            %定义流程图具体形状
+            \node[startstop](start){input\_feature};
+            \node[process,below of = start,yshift = -1cm,xshift=-2cm](pool1){global\_avg\_pool};
+            \node[process,below of = start,yshift = -1cm,xshift=2cm](pool2){global\_max\_pool};
+            \node[process,below of = pool1,yshift = -1cm](fc1){FC1};
+            \node[process,below of = pool2,yshift = -1cm](fc2){FC2};
+            \node[process,below of = fc1,yshift = -1cm,xshift=2cm](as){add+sigmoid};
+            \node[decision,below of = fc2,xshift = 2cm,yshift=-1cm](multi){$\times$};
+            % \node[out,below of = as,yshift = -1cm](channel){output};
+            \node[io,below of = as,yshift = -1cm](out1){output\_feature};
+        
+            % \node[process,below of = pool1,yshift = -1cm,xshift=-4cm](channel){channel\_attention};
+        
+            %连接具体形状
+            \draw [arrow] (start) -- (pool1);
+            \draw [arrow] (start) -- (pool2);
+            \draw [arrow] (pool1) -- (fc1);
+            \draw [arrow] (pool2) -- (fc2);
+            \draw [arrow] (fc1) -- (as);
+            \draw [arrow] (fc2) -- (as);
+            \draw [arrow] (multi) -- (as);
+            \draw [arrow] (start) -| (multi);
+            \draw [arrow] (as) -- (out1);
+        \end{tikzpicture}
+         \label{fig:ca} } 
+    \hfill 
+    \subfigure[spatial\_attention]{
+        \begin{tikzpicture}[node distance=2cm]
+
+            %定义流程图具体形状
+            \node[startstop](start){output\_feature};
+            \node[process,below of = start,yshift = -1cm,xshift=-2cm](pool3){mean(dim=3)};
+            \node[process,below of = start,yshift = -1cm,xshift=2cm](pool4){max(dim=3)};
+            \node[process,below of = pool3,yshift = -1cm,xshift=2cm](cat){concat};
+            \node[process,below of = cat,yshift = -1cm](cs){conv2D+sigmoid};
+            \node[decision,below of = cat,xshift = 4cm,yshift=-1cm](multi){$\times$};
+            % \node[out,below of = as,yshift = -1cm](channel){output};
+            \node[io,below of = cs,yshift = -1cm](out2){cbam\_feature};
+        
+            %连接具体形状
+            \draw [arrow] (start) -- (pool3);
+            \draw [arrow] (start) -- (pool4);
+            \draw [arrow] (pool3) -- (cat);
+            \draw [arrow] (pool4) -- (cat);
+            \draw [arrow] (cat) -- (cs);
+            \draw [arrow] (start) -| (multi);
+            \draw [arrow] (multi) -- (cs);
+            \draw [arrow] (cs) -- (out2);
+        \end{tikzpicture}
+         \label{fig:cf} } 
+    \caption{CBAM structure} 
+    \label{fig:cs} 
+\end{figure}
+
+\subsubsection{实验对比}
+两个attention的module，以何种顺序去设置和组合同样很重要，作者在之后的实验中，
+也体现了channel-first、spatial-first和parallel的实验结果。
+\paragraph{channel\ attention\\}
+这部分作者对比了论文的channel attention方法，主要以ResNet50作为baseline，
+同时对比了SE-ResNet50和本文的两个实验，分别是ResNet50+MaxPool和
+ResNet50+MaxPool\&AvgPool，实验结果如图Figure~\ref{fig:channel_attention}所示：\\
+通过与baseline的对比可以发现，attention方法能提升网络的表征能力，
+在其中使用了AvgPool作为spatial压缩的方法对比MaxPool体现出了更好的优越性，
+当将两者结合在一起以后网络的表征能力更强.
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/channel_attention.PNG}
+    % \caption{channel_attention}
+    \caption{channel\_attention}
+    \label{fig:channel_attention}
+\end{figure}
+\paragraph{attention顺序}
+关于channel attention module和spatial attention module的组合顺序，论文也做了实验，实验结果如图Figure~\ref{fig:arrangement}：\\
+在SE-ResNet50作为baseline的对比中，作者考虑了三种情况：channel-first、spatial-first和parall的方式，可以看到，channel-first能取得更好的分类结果。
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/arrangement.PNG}
+    \caption{arrangement}
+    \label{fig:arrangement}
+\end{figure}
+
+\subsubsection{结论}
+相比之下这篇论文提出的CBAM能更直观、更有逻辑性的表达了网络的设计思路，
+就是在channel和spatial维度上都生成attention map对输入特征进行约束增强处理。
+同时，作者也展示了这种方法在多种任务上都能取得较好的成绩。同时我们发现AI领域中自然语言(最早提出注意力机制)
+和机器视觉的概念的相融合能够相互促进发展。
+\section{目标检测}
+\subsection{Feature Pyramid Network}
+\subsubsection{概要}
+该网络是由Facebook \ AI \ Research ,Cornell \ University 以及Cornell \ Tech共同
+发表，是在原有的卷及网络中嵌入特征金字塔模块。相比历届竞赛获胜网络，如\href{https://towardsdatascience.com/review-g-rmi-winner-in-2016-coco-detection-object-detection-af3f2eaf87e4}{G-RMI},
+\href{https://towardsdatascience.com/review-multipath-mpn-1st-runner-up-in-2015-coco-detection-segmentation-object-detection-ea9741e7c413}{MultiPathNet}
+和\href{https://towardsdatascience.com/review-ion-inside-outside-net-2nd-runner-up-in-2015-coco-detection-object-detection-da19993f4766}{ION}
+模型效果有显著的提升。对比实例分割的网络\href{https://towardsdatascience.com/review-deepmask-instance-segmentation-30327a072339}{DeepMask},
+\href{https://towardsdatascience.com/review-sharpmask-instance-segmentation-6509f7401a61}{SharpMask}
+和\href{https://towardsdatascience.com/review-instancefcn-instance-sensitive-score-maps-instance-segmentation-dbfe67d4ee92}{INstanceFCN}
+在segment \ proposals 有更高的AR。下面具体讲解FPN的结构和应用以及不同的特征金字塔:
+
+\subsubsection{不同特征金字塔对比}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/various-fpn.png}
+    \caption{different \ architures \ for \ detection}
+    \label{fig:various-fpn}
+\end{figure}
+\begin{itemize}
+    \item a 特征图像金字塔：通过将原始图像缩放不同的大小尺度，来获取图像特征。在手工设计特征的时代被大量使用
+    \item b 单一的特征图：该结构是在统一输入图像尺寸的标准卷积网络，只在网络末端的特征进行预测。
+    \item c 金字塔特征结构：该结构和SSD中使用VGG16进行多尺度特征提取基本一致，在前向传播时获取不同层的特征图。不足的是没有在丰富的抽象特征中
+    没有重用高分辨率的特征，一定程度会降低对小目标的检测效果。
+    \item d 特征金字塔网络：通过自上而下的上采样和横线连接将低分辨率，语义特征强的特征和高分辨率，语义特征若的特征
+    相结合。达到每一层的特征都有丰富的语义特征，对于同一的输入图像大小能够快速的建立模型。
+    \item e 该结构相比特征金字塔只是在最后一层的特征进行预测输出。
+\end{itemize}
+\subsubsection{FPN结构}
+FPN自上而下的上采样增加分辨率，横向连接中加入下采样的每一层特征。增强特征的表达能力。\\
+结构图Figure~\ref{fig:FPN}上采样分三步：\\
+1.自上而下的\href{https://www.cnblogs.com/cvtoEyes/p/8513958.html}{反卷积}进行2倍的上采样\\
+2.自下而上的相同大小的特征进行1*1的卷积，然后将1*1卷积后的特征与上采样后的特征进行逐点相加的横向连接\\
+3.将逐点相加后的特征进行3*3的卷积输出最终的特征图，该操作是为了降低上采样中特征重复效应。
+\feng{上采样的过程中会存在特征重复，3*3的卷积将每一层的特征映射到统一的空间？还请虫哥指点}
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/FPN.png}
+    \caption{Feature \ pyramid \ Network(FPN)}
+    \label{fig:FPN}
+\end{figure}
+\subsubsection{检测网络中的RPN}
+替代FasterR-CNN中的RPN模块\\
+1.在\href{https://towardsdatascience.com/review-faster-r-cnn-object-detection-f5685cb30202}{FasterR-CNN}的原始RPN设计中，在单个尺度的特征图中使用滑动窗口使用不同的宽高比
+[0.5,1,2]来后取9种不同大小的候选框。\\
+2.使用FPN代替RPN网络，在上采样的每一层中产生锚点，并且同样使用{1:2,1:1,2:1}的多个宽高比
+来获取更多样的候选框尺度大小。来适应更小多更大的检测目标。\\
+3.最后使用ROI来提取7*7特征，进行最后的分类和边界框回归
+\feng{这个网络之前我会再加上FasterR-CNN网络的讲解，这样理解起来会更好}
+\end{CJK}
+
+\end{document}

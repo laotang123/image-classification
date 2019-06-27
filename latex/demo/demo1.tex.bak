@@ -1,0 +1,110 @@
+% hello.tex
+\documentclass[GBK]{ctexrep}
+%\usepackage{hyperref}
+\usepackage{tikz}
+
+\begin{document}
+%标题摘要
+\title{缺陷检测项目进度}
+\author{林涛 刘俊峰}
+\date{2019年 6月 26}
+\maketitle
+
+%摘要
+%\begin{abstract}
+%some abstract...
+%\end{abstract}
+
+
+\part{图像分类}
+\usetikzlibrary{trees}
+\chapter{项目开发思维导图}
+
+
+\pagestyle{empty}
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}
+  \path[mindmap,concept color=black,text=white]
+    node[concept] {图像分类项目}
+    [clockwise from=0]
+
+    % 节点1
+    child[concept color=green!50!black] {
+      node[concept] {1.数据采集}
+      [clockwise from=90]
+      child { node[concept] {分类类别数量：单个图像多标签} }
+      child { node[concept] {数据的纯度} }
+    }
+    % 节点2
+    child[concept color=blue] {
+      node[concept] {2.数据预处理}
+      [clockwise from=30] % 旋转的角度
+      child { node[concept] {放缩(resize)} }
+      child { node[concept] {旋转，平移} }
+      child { node[concept] {归一化(正态分布，均匀分布)}}
+    }
+    child[concept color=red] {
+      node[concept] {3.模型训练}
+      [clockwise from=-60]
+      child [concept color=orange]{
+      node[concept] {a.模型结构}
+      [clockwise from=-30]
+      child { node[concept] {基础模型} }
+      child { node[concept] {速度} }
+      child { node[concept] {精度} }
+       }
+      child[concept color=orange]{
+      node[concept] {b.调参}
+      [clockwise from=-100]
+      child { node[concept] {参数初始化}}
+      child { node[concept] {学习率}}
+      child { node[concept] {weight decay}}
+      child { node[concept] {batchsize}}
+       }
+      child [concept color=orange]{
+       node[concept] {c.增加泛化能力}
+       [clockwise from=-180]
+       child {node[concept]{优化器}}
+       child {node[concept]{Regularization}}
+       child {node[concept]{增加数据的质量和数量}}
+       }
+     }
+    child[concept color=orange] {
+    node[concept] {4.模型预测}
+    [clockwise from=90]
+    child {node[concept]{评价指标(Accuracy/confusion matrix)}}
+    child {node[concept]{过拟合/欠拟合}}
+    };
+\end{tikzpicture}
+\end{figure}
+
+
+\begin{tikzpicture}[edge from parent fork right,grow=right,level distance=3cm,level 1/.style={sibling distance=4cm},
+level 2/.style={sibling distance=1cm}]
+\node[text width=1cm] {Idea General}
+child {node {Some idea}}
+child {node {Some idea}
+child {node {Details}}
+child {node {Details}}
+child {node {Details}}
+};
+\end{tikzpicture}
+\chapter{章标题}
+这一章我们来介绍这些内容
+
+\section{节标题}
+这是第一节分类模型
+
+\subsection{小节标题}
+数据采集
+
+\subsubsection{子节标题}
+七分类数据集
+
+\paragraph{段标题}
+数据介绍
+
+\subparagraph{子段标题}
+每个类别的数据量
+\end{document}
