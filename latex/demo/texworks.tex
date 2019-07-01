@@ -54,12 +54,12 @@
     % 节点1
     child[concept color=green!50!black] {
       node[concept] {1.数据采集}
-      [clockwise from=90]
+      [clockwise from=100]
       child { node[concept] {分类类别数量：单个图像多标签} }
       child { node[concept] {数据的纯度} }
     }
     % 节点2
-    child[concept color=blue] {
+    child[concept color=blue!50!white] {
       node[concept] {2.数据预处理}
       [clockwise from=30] % 旋转的角度
       child { node[concept] {放缩(resize)} }
@@ -94,7 +94,7 @@
      }
     child[concept color=orange] {
     node[concept] {4.模型预测}
-    [clockwise from=90]
+    [clockwise from=150]
     child {node[concept]{评价指标(Accuracy/confusion matrix)}}
     child {node[concept]{过拟合/欠拟合}}
     };
