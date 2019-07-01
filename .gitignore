@@ -104,6 +104,6 @@ venv.bak/
 .mypy_cache/
 
 # latex
-.synctex.gz
-.aux
-.out
+*.synctex.gz
+*.aux
+*.out
