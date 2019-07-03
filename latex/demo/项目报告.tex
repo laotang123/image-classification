@@ -1,0 +1,222 @@
+\documentclass{article}
+
+%%%%%%%%%%%%%%%%%%% layout
+\usepackage{indentfirst}
+\setlength{\parindent}{2em}
+% We will use NIPS submission format
+\usepackage{../common/nips13submit_e,times}
+
+% for hyperlinks
+\usepackage{hyperref}
+\usepackage{url}
+% For figures
+\usepackage{graphicx}
+\usepackage{subfigure}
+% math packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsopn}
+\usepackage{ifthen}
+\usepackage{natbib}
+\usepackage{enumerate}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{fancyvrb}
+\usepackage{float}
+\usepackage[utf8]{inputenc}
+\usepackage[top=3cm,bottom=3cm,right=3cm,left=3cm]{geometry}
+% appendix
+\usepackage{appendix}
+
+
+\usepackage{tikz}
+\usetikzlibrary{mindmap,trees}
+
+\usepackage{CJKutf8}
+\input{../common/definitions}
+
+
+%%%%%%%%%%%%%%%%%%% configure note.
+\usepackage[textwidth=4.3cm]{todonotes}
+\newcommand{\tao}[1]{\todo[color=red!20,size=\footnotesize]{T: #1}{}}
+
+%%%%%%%%%%%%%%%%%%% highlight something.
+\usepackage{xcolor}
+\usepackage{soul}
+\newcommand{\mathcolorbox}[2]{\colorbox{#1}{$\displaystyle #2$}}
+\newcommand{\hlfancy}[2]{\sethlcolor{#1}\hl{#2}}
+
+%%%%%%%%%%%%%%%%%%% begin the document.
+\nipsfinalcopy
+\begin{document}
+\begin{CJK}{UTF8}{gbsn}
+\CJKindent
+
+\title{缺陷检测项目进度}
+\author{林涛 刘俊峰}
+\date{2019年 6月 26}
+\maketitle
+
+
+%\section{Template 模版}
+
+
+\begin{abstract}
+	\hspace{2em}
+	项目报告主要分为两大块“分类模型”和“检测模型”，每一块从总体的项目思维导图、项目的关键节点和相关实验结果分析三个部分组成。
+  深度学习框架为pytorch，编程语言为python，模型训练设备为双GPU 1080Ti。
+\end{abstract}
+
+%\chapter{图像分类}
+\section{图像分类}
+当前项目为灰度图像的分类模型构建，一共有七种分类类别。评价指标包括Accuracy和Confusion Matrix。
+\subsection{项目思维导图}
+
+\pagestyle{empty}
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.8]
+  \path[mindmap,concept color=black,text=white]
+    node[concept] {图像分类项目}
+    [clockwise from=0]
+
+    % 节点1
+    child[concept color=green!50!black] {
+      node[concept] {1.数据采集}
+      [clockwise from=100]
+      child { node[concept] {分类类别数量：单个图像多标签} }
+      child { node[concept] {数据的纯度} }
+    }
+    % 节点2
+    child[concept color=blue!80!white] {
+      node[concept] {2.数据预处理}
+      [clockwise from=40] % 旋转的角度
+      child { node[concept] {放缩(resize)} }
+      child { node[concept] {旋转，平移} }
+      child { node[concept] {归一化(正态分布，均匀分布)}}
+      child { node[concept] {亮度，锐度，对比度}}
+    }
+    child[concept color=red] {
+      node[concept] {3.模型训练}
+      [clockwise from=-70]
+      child [concept color=orange]{
+      node[concept] {a.模型结构}
+      [clockwise from=-30]
+      child { node[concept] {基础模型} }
+      child { node[concept] {速度} }
+      child { node[concept] {精度} }
+       }
+      child[concept color=orange]{
+      node[concept] {b.调参}
+      [clockwise from=-100]
+      child { node[concept] {参数初始化}}
+      child { node[concept] {学习率}}
+      child { node[concept] {weight decay}}
+      child { node[concept] {batchsize}}
+       }
+      child [concept color=orange]{
+       node[concept] {c.增加泛化能力}
+       [clockwise from=-180]
+       child {node[concept]{优化器}}
+       child {node[concept]{Regularization}}
+       child {node[concept]{增加数据的质量和数量}}
+       }
+     }
+    child[concept color=orange] {
+    node[concept] {4.模型预测}
+    [clockwise from=150]
+    child {node[concept]{评价指标(Accuracy/confusion matrix)}}
+    child {node[concept]{过拟合/欠拟合}}
+    };
+\end{tikzpicture}
+\end{figure}
+
+
+%\newpage
+\subsection{项目关键节点}
+\subsubsection{模型收敛}
+原始图片格式为tif的710*710灰度图，模型发散。后剪切为480*480，剪切依据为图像周围的像素点不在分类图像的特征区域。模型初步筛选的结果在小节~\ref{clip}
+原因分析：
+
+\subsubsection{图像放缩和归一化}
+考虑到模型的batch size比较小，训练时间长。故图片放缩到300*300大小，经ResNet网络测试该策略的有效性(精度提升1-2个点)。当时有过FPN22网络进行测试，实验结果没有及时保存，后期测试添加！具体的分辨率与精度和batch size之间的关系在小节\ref{300*300}。
+根据数据集计算出mean和std，对读取的480*480图像进行放缩(300*300)和Normalization，最终的输入图片可视化结果Figure~\ref{fig:nor-img}
+原因分析：
+
+\subsubsection{缓解过拟合}
+
+\subsubsection{迁移学习}
+
+\subsubsection{合并分类类别}
+
+
+%\newpage
+\subsection{实验细节}
+
+\subsubsection{改进一：图像裁剪}\label{clip}
+原始图片和剪切之后的图片对比Figure~\ref{fig:origin-clip},直接剪切中心特征部分。
+\begin{figure}[!ht]
+    \centering
+    \subfigure[原始图片]{
+        \includegraphics[width=0.5\textwidth,]{figures/origin-img.jpg}
+        \label{fig:clip-img}
+    }
+    \hfill
+    \subfigure[剪切图片]{
+        \includegraphics[width=0.3\textwidth,]{figures/clip-img.jpg}
+        \label{fig:clip-img}
+    }
+    \caption{图像剪切}
+    \label{fig:origin-clip}
+\end{figure}
+模型测试结果如Table~\ref{tab:model-test}
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+model      & train\_acc & test\_acc & valid\_acc & parameters(M) \\ \hline
+ResNet20   & 0.99       & 0.807     & 0.79       & 0.28          \\ \hline
+DenseNet20 & 0.77       & 0.688     & 0.407      & 0.04          \\ \hline
+FPN22      & 1.0        & 0.623     & 0.64       & 10.27         \\ \hline
+\end{tabular}
+\caption{模型对比}
+\label{tab:model-test}
+\end{table}
+
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/model_vs_acc.jpg}
+    \caption{模型准确率对比}
+    \label{vs-acc}
+\end{figure}
+
+
+\subsubsection{改进二：图像放缩和归一化}\label{300*300}
+
+\begin{figure}[!ht]
+    \centering
+    \subfigure[batch-size vs resolution]{
+        \includegraphics[width=0.45\textwidth,]{figures/bs-vs-resolution.jpg}
+        \label{fig:clip-img}
+    }
+    \hfill
+    \subfigure[accuracy vs resolution]{
+        \includegraphics[width=0.45\textwidth,]{figures/accuracy-vs-resolution.jpg}
+        \label{fig:clip-img}
+    }
+    \caption{image resize}
+    \label{fig:img-resize}
+\end{figure}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.4\textwidth]{figures/normalization.jpg}
+    \caption{Normalization}
+    \label{nor-img}
+\end{figure}
+
+
+\end{CJK}
+\end{document}
