@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/GCNet" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/LaMP" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/OctaveConv" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/distiller" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/materials" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/mixup" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/opencv" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pytorch-beginner" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pytorch-cnn-visualizations" vcs="Git" />
+  </component>
+</project>

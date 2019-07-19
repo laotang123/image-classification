@@ -1,0 +1,82 @@
+{
+    "operators": [
+        {
+            "name": "fc1",
+            "type": "Linear",
+            "input": [
+                "input"
+            ],
+            "output": [
+                "fc1"
+            ],
+            "param": {
+                "input_size": 5,
+                "output_size": 10,
+                "bias": false
+            }
+        },
+        {
+            "name": "tanh",
+            "type": "Tanh",
+            "input": [
+                "fc1"
+            ],
+            "output": [
+                "tanh"
+            ]
+        },
+        {
+            "name": "fc2",
+            "type": "Linear",
+            "input": [
+                "tanh"
+            ],
+            "output": [
+                "fc2"
+            ],
+            "param": {
+                "input_size": 10,
+                "output_size": 25,
+                "bias": true
+            }
+        },
+        {
+            "name": "sigmoid",
+            "type": "Sigmoid",
+            "input": [
+                "fc2"
+            ],
+            "output": [
+                "sigmoid"
+            ]
+        },
+        {
+            "name": "fc3",
+            "type": "Linear",
+            "input": [
+                "sigmoid"
+            ],
+            "output": [
+                "fc3"
+            ],
+            "param": {
+                "input_size": 25,
+                "output_size": 1,
+                "bias": true
+            }
+        },
+        {
+            "name": "prob",
+            "type": "Sigmoid",
+            "input": [
+                "fc3"
+            ],
+            "output": [
+                "prob"
+            ]
+        }
+    ],
+    "meta": {
+        "model_version": 1
+    }
+}
