@@ -107,3 +107,13 @@ venv.bak/
 *.synctex.gz
 *.aux
 *.out
+
+# dataset
+*.pt
+*.bak
+*.pth
+*.onnx
+*.gz
+*.zip
+
+
