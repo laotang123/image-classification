@@ -7,7 +7,7 @@ from torch import optim
 
 # 一 数据
 train_x = torch.rand(size=[10,5])
-train_y = torch.rand(size=[10])
+train_y = torch.rand(size=[10,1])
 # 二 网络
 class Net(nn.Module):
     def __init__(self):
@@ -47,7 +47,7 @@ for i in range(20):
 
     # print("Loss:{}".format(loss))
 # 五 模型保存
-import io
-torch.save(model,"./weight-py32.pth")
+# import io
+torch.save(model.state_dict(),"./weight-py32-1.pth")
 # buffer = io.BytesIO()
 # torch.save(model.state_dict(), buffer)

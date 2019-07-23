@@ -98,8 +98,8 @@ def format_name(name, is_lstm):
 #   print( "usage: {} pytorch_model_file lnn_weight_file".format(sys.argv[0]))
 #   sys.exit()
 
-model_path = "./weight.pth"
-res_path = "./data/weight-ljf.dat"
+model_path = "./weight-py32-1.pth"
+res_path = "./data/weight-ljf-32py32-1.dat"
 # model = torch.load(model_path, map_location=lambda storage, loc : storage)["state_dict"]
 model = torch.load(model_path, map_location=lambda storage, loc : storage)
 # print(type(model))
@@ -181,24 +181,23 @@ magic_arr.append(len(tensor_name))
 magic_arr.tofile(f)
 
 # write tensor name & size & value
-name_arr = array('u')
+# name_arr = array('u')
+name_str = ""
 size_arr = array('I')
 val_arr = array('f')
 for i in range(len(tensor)):
   if "feature_embed.weights" == tensor_name[i]:
     tensor_name[i] = "feature_embed.weight"
   op_name = get_op_name(tensor_name[i])
-  # print("tensor_{} (of operator [{}]): \torig_name: {}\tshape: {}".format(i, op_name, tensor_name[i], tensor[i].size()))
+  print("tensor_{} (of operator [{}]): \torig_name: {}\tshape: {}".format(i, op_name, tensor_name[i], tensor[i].size()))
   name, op_name = format_name(tensor_name[i], is_lstm[i])
   if not op_name in ops:
     ops.append(op_name)
   # print(len(name))
-  for j in range(len(name)):name
-
-    print(type(name[j]))
-    name_arr.append(name[j])
+  for j in range(len(name)):
+    name_str+=name[j]
   tensor_i = tensor[i].numpy().flatten().tolist()
-  # print( "\t(of operator [{}])\tfinal_name: {}\tsize: {}\tis_rnn: {}\tis_lstm: {}\n".format(op_name, name, len(tensor_i), is_rnn[i], is_lstm[i]))
+  print( "\t(of operator [{}])\tfinal_name: {}\tsize: {}\tis_rnn: {}\tis_lstm: {}\n".format(op_name, name, len(tensor_i), is_rnn[i], is_lstm[i]))
   size_arr.append(len(tensor_i))
   # transform i|f|g|o to i|f|o|g for lstm
   if True == is_lstm[i]:
@@ -219,7 +218,8 @@ for i in range(len(tensor)):
 for i in range(len(ops)):
   print( ops[i])
 
-name_arr.tofile(f)
+# name_arr.tofile(f)
+f.write(name_str.encode("ascii","strict"))
 size_arr.tofile(f)
 val_arr.tofile(f)
 f.close()
