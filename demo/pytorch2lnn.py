@@ -98,8 +98,8 @@ def format_name(name, is_lstm):
 #   print( "usage: {} pytorch_model_file lnn_weight_file".format(sys.argv[0]))
 #   sys.exit()
 
-model_path = "./weight-py32-1.pth"
-res_path = "./data/weight-ljf-32py32-1.dat"
+model_path = "./weight-conv1d.pth"
+res_path = "./data/weight-conv1d.dat"
 # model = torch.load(model_path, map_location=lambda storage, loc : storage)["state_dict"]
 model = torch.load(model_path, map_location=lambda storage, loc : storage)
 # print(type(model))

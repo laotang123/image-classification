@@ -1,0 +1,59 @@
+{
+    "operators": [
+        {
+            "name": "conv1",
+            "type": "Conv1D",
+            "input": [
+                "input"
+            ],
+            "output": [
+                "conv1"
+            ],
+            "param": {
+                "input_size": 5,
+                "output_size": 10,
+				"kernel_size": 3,
+                "bias": true
+            }
+        },
+        {
+            "name": "tanh",
+            "type": "Tanh",
+            "input": [
+                "conv1"
+            ],
+            "output": [
+                "tanh"
+            ]
+        },
+        {
+            "name": "conv2",
+            "type": "Conv1D",
+            "input": [
+                "tanh"
+            ],
+            "output": [
+                "conv2"
+            ],
+            "param": {
+                "input_size": 10,
+                "output_size": 5,
+				"kernel_size": 3,
+                "bias": true
+            }
+        },
+        {
+            "name": "prob",
+            "type": "Sigmoid",
+            "input": [
+                "conv2"
+            ],
+            "output": [
+                "prob"
+            ]
+        }
+    ],
+    "meta": {
+        "model_version": 1
+    }
+}
