@@ -6,6 +6,7 @@ from torch import nn
 from torch import optim
 import numpy as np
 
+# TODO
 # 一 数据
 train_x = torch.rand(size=[10,3,5,5])
 train_y = torch.rand(size=[10,5,1,1])
@@ -30,20 +31,20 @@ class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
         self.conv1 = nn.Conv2d(in_channels=3,out_channels=10,kernel_size=3,stride=1)
-        self.bn = nn.BatchNorm2d(num_features=10)
+        self.tanh = nn.Tanh()
         self.conv2 = nn.Conv2d(in_channels=10,out_channels=5,kernel_size=3,stride=1)
         self.sigmoid = nn.Sigmoid()
     def forward(self, x):
         out = self.conv1(x)
-        out = self.bn(out)
+        out = self.tanh(out)
         out = self.conv2(out)
         out = self.sigmoid(out)
         return out
 # 三 优化器，损失函数
-is_evaluate = True
+is_evaluate = False
 model = Net()
 if is_evaluate:
-    model.load_state_dict(torch.load("./weight-conv2d-bn.pth"))
+    model.load_state_dict(torch.load("./weight-conv2d.pth"))
     test_x = torch.Tensor(np.random.randint(1,9,(1,10,3,3)))
     # for k,v in torch.load("./weight-conv2d-bn.pth").items():
     #     print(k)
@@ -83,6 +84,6 @@ else:
     # 五 模型保存
     # [0.535030,0.461349,0.541562,0.550206,0.534486,]
     # import io
-    torch.save(model.state_dict(),"./weight-conv2d-bn.pth")
+    torch.save(model.state_dict(),"./weight-conv2d.pth")
     # buffer = io.BytesIO()
     # torch.save(model.state_dict(), buffer)
