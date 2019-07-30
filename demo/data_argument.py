@@ -48,12 +48,12 @@ parser.add_argument("--excursion", type=int, default=10,
 parser.add_argument(
     "--path",
     type=str,
-    default="./data/classification-7-619-701",
+    default="./data/classification-7-730",
     help="original image path ")
 parser.add_argument(
     "--new_path",
     type=str,
-    default="./data/enhance-classification-7-619-701",
+    default="./data/enhance-classification-7-730",
     help="")
 parser.add_argument("--max_num", type=int, default=2499,
                     help="the maximum number of images")
