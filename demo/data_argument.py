@@ -48,12 +48,12 @@ parser.add_argument("--excursion", type=int, default=10,
 parser.add_argument(
     "--path",
     type=str,
-    default="./data/classification-7-730",
+    default="./data/classification-8-729",
     help="original image path ")
 parser.add_argument(
     "--new_path",
     type=str,
-    default="./data/enhance-classification-7-730",
+    default="./data/enhance-classification-8-729",
     help="")
 parser.add_argument("--max_num", type=int, default=2499,
                     help="the maximum number of images")
@@ -256,6 +256,7 @@ def main(args):
     # 原始文件夹列表
     old_folder_list = os.listdir(args.path)
 
+    # cn2en = {"点":"dot","粉尘":"dust","划伤":"scratch","良品":"good","丝印":"silk","毛丝":"filament","点粉":"ddust","断胶":"glue","脏污":"smudge"}
     if args.is_crop:
         print("开始进行图像剪切并存储图片")
         time.sleep(2)
@@ -282,7 +283,8 @@ def main(args):
             img = Image.open(img_path, mode="r")
             # print(img_name)
             # img_name = "{}-".format(folder) +"0" * (6 - len(str({}))) + str({}) + ".{}".format(args.img_format)
-            save_path = os.path.join(args.new_path, folder, img_name_list[0]+"-{}."+img_name_list[1])
+            save_path = os.path.join(args.new_path, folder, folder+str(id)+"-{}."+img_name_list[1])
+            print(save_path)
             # print("正在处理第{}张图片".format(id))
             if args.is_crop:
             # 如果处理的图像是需要剪切的，则需要先剪切存储到新的文件夹
@@ -316,7 +318,7 @@ def main(args):
             img_name_list = img_path.split("\\")[-1].split(".")
             img = Image.open(img_path, mode="r")
             # img_name = "{}-".format(folder)+"0" * (6 - len(str({}))) + str({}) + ".{}".format(args.img_format)
-            save_path = os.path.join(args.new_path, folder, img_name_list[0]+"-{}."+img_name_list[1])
+            save_path = os.path.join(args.new_path, folder, folder+str(id)+"-{}."+img_name_list[1])
             # print("正在处理第{}张图片".format(id))
 
             if id > args.min_num:
@@ -343,14 +345,14 @@ def main(args):
                 img_name_list = img_path.split("\\")[-1].split(".")
                 img = Image.open(img_path, mode="r")
                 # img_name = "{}-".format(folder)+"0" * (6 - len(str({}))) + str({}) + ".{}".format(args.img_format)
-                save_path = os.path.join(args.new_path, folder, img_name_list[0]+"-{}{}."+img_name_list[1])
+                save_path = os.path.join(args.new_path, folder, folder+str(id)+"-{}."+img_name_list[1])
                 if id > args.min_num:
                     break
                 else:
                     translation_img = argument.ImageTranslation(img)
                     print(save_path.format("translation",id))
                     print("正在进行图像偏移中...")
-                    argument.SaveImage(translation_img,save_path.format("translation",id))
+                    argument.SaveImage(translation_img,save_path.format("translation"))
                     id +=1
         print("{}图像处理完成".format(folder))
         time.sleep(1)

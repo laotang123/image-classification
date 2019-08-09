@@ -1,0 +1,8 @@
+good 0
+smudge 1
+dust 2
+filament 3
+silk 4
+dot 5
+scratch 6
+glue 7

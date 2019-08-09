@@ -1,0 +1,7 @@
+good 0
+ddust 1
+scratch 2
+silk 3
+filament 4
+smudge 5
+glue 6
