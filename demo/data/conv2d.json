@@ -1,56 +1,20 @@
 {
     "operators": [
         {
-            "name": "conv1",
+            "name": "conv2d",
             "type": "Conv2D",
             "input": [
                 "input"
             ],
             "output": [
-                "conv1"
+                "out"
             ],
             "param": {
                 "input_size": 3,
-                "output_size": 10,
+                "output_size": 3,
 				"kernel_size": 3,
-                "bias": true
+                "bias": false
             }
-        },
-        {
-            "name": "tanh",
-            "type": "Tanh",
-            "input": [
-                "conv1"
-            ],
-            "output": [
-                "tanh"
-            ]
-        },
-        {
-            "name": "conv2",
-            "type": "Conv2D",
-            "input": [
-                "tanh"
-            ],
-            "output": [
-                "conv2"
-            ],
-            "param": {
-                "input_size": 10,
-                "output_size": 5,
-				"kernel_size": 3,
-                "bias": true
-            }
-        },
-        {
-            "name": "prob",
-            "type": "Sigmoid",
-            "input": [
-                "conv2"
-            ],
-            "output": [
-                "prob"
-            ]
         }
     ],
     "meta": {

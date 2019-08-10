@@ -1,0 +1,23 @@
+{
+    "operators": [
+        {
+            "name": "conv2d",
+            "type": "Conv2D",
+            "input": [
+                "input"
+            ],
+            "output": [
+                "out"
+            ],
+            "param": {
+                "input_size": 3,
+                "output_size": 3,
+				"kernel_size": 3,
+                "bias": true
+            }
+        }
+    ],
+    "meta": {
+        "model_version": 1
+    }
+}
