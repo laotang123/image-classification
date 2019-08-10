@@ -19,7 +19,7 @@ print(test_x.size())
 class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
-        self.conv2d = nn.Conv2d(in_channels=3,out_channels=3,kernel_size=3)
+        self.conv2d = nn.Conv2d(in_channels=3,out_channels=3,kernel_size=3,bias=True)
 
         for m in self.modules():
             if isinstance(m,nn.Conv2d):
@@ -30,7 +30,7 @@ class Net(nn.Module):
         return out
 
 # 三 优化器，损失函数
-is_evaluate = True
+is_evaluate = False
 model = Net()
 if is_evaluate:
     model.load_state_dict(torch.load("./conv2d.pth"))
