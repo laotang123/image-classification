@@ -26,34 +26,30 @@ print(test_x.size())
 class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
-<<<<<<< HEAD:demo/DemoCon2d.py
-        self.conv2d = nn.Conv2d(in_channels=3,out_channels=3,kernel_size=3,bias=True)
-
-        for m in self.modules():
-            if isinstance(m,nn.Conv2d):
-                nn.init.constant_(m.weight,1.0)
-                nn.init.constant_(m.bias,1.0)
-=======
         self.conv2d = nn.Conv2d(in_channels=3,out_channels=3,kernel_size=3,bias=True,stride=2,padding=1)
+
+        # for m in self.modules():
+        #     if isinstance(m,nn.Conv2d):
+        #         nn.init.constant_(m.weight,1.0)
+        #         nn.init.constant_(m.bias,1.0)
         # self.conv2d2 = nn.Conv2d(in_channels=3,out_channels=3,kernel_size=3,bias=True,stride=1,padding=1)
         # nn.BatchNorm2d()
         # for m in self.modules():
         #     if isinstance(m,nn.Conv2d):
         #         nn.init.constant_(m.weight,1.0)
         #         nn.init.constant_(m.bias,1.0)
->>>>>>> fe454367a7c41899ad6a0af074cb33e005c23d93:demo/test-light-nn/DemoCon2d.py
     def forward(self, x):
         out = self.conv2d(x)
         # out = self.conv2d2(out)
         return out
 
 # 三 优化器，损失函数
-is_evaluate = False
+is_evaluate = True
 model = Net()
 if is_evaluate:
-    model.load_state_dict(torch.load("./conv2d.pth"))
+    model.load_state_dict(torch.load("./pth/conv2d.pth"))
     # test_x = torch.Tensor(np.random.randint(1,9,(1,10,3,3)))
-    for k,v in torch.load("conv2d.pth").items():
+    for k,v in torch.load("./pth/conv2d.pth").items():
        print(v)
     print(test_x)
     model.eval()
@@ -82,5 +78,5 @@ else:
     # 五 模型保存
     # [0.535030,0.461349,0.541562,0.550206,0.534486,]
     # import io
-    torch.save(model.state_dict(),"./conv2d.pth")
+    torch.save(model.state_dict(),"./pth/conv2d.pth")
 

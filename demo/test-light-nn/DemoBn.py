@@ -38,9 +38,9 @@ class Net(nn.Module):
 is_evaluate = True
 model = Net()
 if is_evaluate:
-    model.load_state_dict(torch.load("./bn.pth"))
+    model.load_state_dict(torch.load("./batchnorm2d.pth"))
     # test_x = torch.Tensor(np.random.randint(1,9,(1,10,3,3)))
-    for k,v in torch.load("bn.pth").items():
+    for k,v in torch.load("batchnorm2d.pth").items():
        print(k,v)
     # print(test_x)
     mean = test_x.mean(dim=[2, 3], keepdim=True)
@@ -77,5 +77,5 @@ else:
     # 五 模型保存
     # [0.535030,0.461349,0.541562,0.550206,0.534486,]
     # import io
-    torch.save(model.state_dict(),"./bn.pth")
+    torch.save(model.state_dict(),"./batchnorm2d.pth")
 

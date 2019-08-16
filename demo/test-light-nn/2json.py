@@ -11,7 +11,7 @@ import jsonlib
 
 def WriteResidualJson(write_path):
     json_dict = {
-        "operator": [
+        "operators": [
             {
                 "name": "conv1",
                 "type": "Conv2D",
@@ -83,8 +83,8 @@ def WriteResidualJson(write_path):
                     "layer.0.bn1"
                 ],
                 "param": {
-                    "input_size": 3,
-                    "output_size": 3
+                    "input_size": 6,
+                    "output_size": 6
                 }
             },  # bn2
             {
@@ -94,7 +94,7 @@ def WriteResidualJson(write_path):
                     "layer.0.bn1"
                 ],
                 "output": [
-                    "layer.0.relu"
+                    "layer.0.relu1"
                 ]
             },  # relu1
             {
@@ -144,7 +144,7 @@ def WriteResidualJson(write_path):
                     "output_size": 6,
                     "kernel_size": 1,
                     "stride": 2,
-                    "padding": 1,
+                    "padding": 0,
                     "bias": False
                 }
             },  # conv3
@@ -162,24 +162,216 @@ def WriteResidualJson(write_path):
                     "output_size": 6
                 }
             },  # bn3
+            # residual
             {
-                "name": "layer.0.relu2",
-                "type": "ReLU",
+                "name": "residual",
+                "type": "Residual",
                 "input": [
                     "layer.0.bn2",
                     "layer.0.downsample.1"
                 ],
                 "output": [
+                    "residual"
+                ]
+            },
+            {
+                "name": "layer.0.relu2",
+                "type": "ReLU",
+                "input": [
+                    "residual"
+                ],
+                "output": [
                     "output"
                 ]
-            },  # relu2,输出out1
+            }# relu2,输出out1
         ]
     }
     # print (json.dumps({'a': 'Runoob', 'b': 7}, sort_keys=True, indent=4, separators=(',', ': ')))
     with open(write_path, "w") as file:
         json.dump(json_dict, file, indent=4, separators=(',', ': '))
 
+def WriteResnet20(write_path):
+    json_dict = {
+        "operators": [
+            {
+                "name": "conv1",
+                "type": "Conv2D",
+                "input": [
+                    "input"
+                ],
+                "output": [
+                    "conv1"
+                ],
+                "param": {
+                    "input_size": 3,
+                    "output_size": 16,
+                    "kernel_size": 3,
+                    "stride": 1,
+                    "padding": 1,
+                    "bias": False
+                }
+            },  # conv1
+            {
+                "name": "bn1",
+                "type": "BatchNorm2D",
+                "input": [
+                    "conv1"
+                ],
+                "output": [
+                    "bn1"
+                ],
+                "param": {
+                    "input_size": 16,
+                    "output_size": 16
+                }
+            },  # bn1
+            {
+                "name": "leakyrelu",
+                "type": "LeakyReLU",
+                "input": [
+                    "bn1"
+                ],
+                "output": [
+                    "leakyrelu"
+                ]
+            },  # leakyrelu
+            # layer1
+            {
+                "name": "layer.0.conv1",
+                "type": "Conv2D",
+                "input": [
+                    "leakyrelu"
+                ],
+                "output": [
+                    "layer.0.conv1"
+                ],
+                "param": {
+                    "input_size": 3,
+                    "output_size": 6,
+                    "kernel_size": 3,
+                    "stride": 2,
+                    "padding": 1,
+                    "bias": False
+                }
+            },  # conv2，输入leakyrelu
+            {
+                "name": "layer.0.bn1",
+                "type": "BatchNorm2D",
+                "input": [
+                    "layer.0.conv1"
+                ],
+                "output": [
+                    "layer.0.bn1"
+                ],
+                "param": {
+                    "input_size": 6,
+                    "output_size": 6
+                }
+            },  # bn2
+            {
+                "name": "layer.0.relu1",
+                "type": "ReLU",
+                "input": [
+                    "layer.0.bn1"
+                ],
+                "output": [
+                    "layer.0.relu1"
+                ]
+            },  # relu1
+            {
+                "name": "layer.0.conv2",
+                "type": "Conv2D",
+                "input": [
+                    "layer.0.relu1"
+                ],
+                "output": [
+                    "layer.0.conv2"
+                ],
+                "param": {
+                    "input_size": 6,
+                    "output_size": 6,
+                    "kernel_size": 3,
+                    "stride": 1,
+                    "padding": 1,
+                    "bias": False
+                }
+            },  # conv3
+            {
+                "name": "layer.0.bn2",
+                "type": "BatchNorm2D",
+                "input": [
+                    "layer.0.conv2"
+                ],
+                "output": [
+                    "layer.0.bn2"
+                ],
+                "param": {
+                    "input_size": 6,
+                    "output_size": 6
+                }
+            },  # bn2
+            # downsample
+            {
+                "name": "layer.0.downsample.0",
+                "type": "Conv2D",
+                "input": [
+                    "leakyrelu"
+                ],
+                "output": [
+                    "layer.0.downsample.0"
+                ],
+                "param": {
+                    "input_size": 3,
+                    "output_size": 6,
+                    "kernel_size": 1,
+                    "stride": 2,
+                    "padding": 0,
+                    "bias": False
+                }
+            },  # conv3
+            {
+                "name": "layer.0.downsample.1",
+                "type": "BatchNorm2D",
+                "input": [
+                    "layer.0.downsample.0"
+                ],
+                "output": [
+                    "layer.0.downsample.1"
+                ],
+                "param": {
+                    "input_size": 6,
+                    "output_size": 6
+                }
+            },  # bn3
+            # residual
+            {
+                "name": "residual",
+                "type": "Residual",
+                "input": [
+                    "layer.0.bn2",
+                    "layer.0.downsample.1"
+                ],
+                "output": [
+                    "residual"
+                ]
+            },
+            {
+                "name": "layer.0.relu2",
+                "type": "ReLU",
+                "input": [
+                    "residual"
+                ],
+                "output": [
+                    "output"
+                ]
+            }  # relu2,
 
+            # layer2
+        ]
+    }
+    # print (json.dumps({'a': 'Runoob', 'b': 7}, sort_keys=True, indent=4, separators=(',', ': ')))
+    with open(write_path, "w") as file:
+        json.dump(json_dict, file, indent=4, separators=(',', ': '))
 def WritePooling2dJson(write_path):
     pass
 
@@ -195,4 +387,5 @@ def WriteLeakyReluJson(write_path):
 
 
 if __name__ == "__main__":
-    WriteResidualJson("json/residual.json")
+    # WriteResidualJson("json/residual.json")
+    WriteResnet20("json/resnet20.json")

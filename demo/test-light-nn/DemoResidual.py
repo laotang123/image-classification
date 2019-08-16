@@ -6,7 +6,7 @@ from torch import nn
 from torch import optim
 import numpy as np
 
-# TODO
+# TODO layer0的卷积层输出结果不对！
 # 一 数据
 train_x = torch.rand(size=[10, 3, 8, 8])
 train_y = torch.rand(size=[10, 6, 4, 4])
@@ -113,17 +113,35 @@ class ResNet(nn.Module):
 is_evaluate = True
 model = ResNet(8)
 if is_evaluate:
-    model.load_state_dict(torch.load("./residual.pth"))
+    model.load_state_dict(torch.load("./pth/residual.pth"))
     # test_x = torch.Tensor(np.random.randint(1,9,(1,10,3,3)))
-    for k, v in torch.load("residual.pth").items():
-        print(k)
+    # for k, v in torch.load("./pth/residual.pth").items():
+    #     print(k)
     # print(test_x)
     model.eval()
-    print(model.conv1(test_x).size())
-    # print(model.conv2d(test_x))
+    # print(model.conv1(test_x).size())
+    print("model.conv1" + "*" * 200)
+    temp = model.conv1(test_x)
+    print(temp)
+    print("model.bn1" + "*" * 200)
+    temp = model.bn1(temp)
+    print(temp)
+    print("model.relu" + "*" * 200)
+    temp = model.relu(temp)
+    print(temp)
+    print(model.layer)
+    print("model.layer.conv1" + "*" * 200)
+    temp = model.layer[0].conv1(temp)
+    print(temp)
+    print("model.layer.bn1" + "*" * 200)
+    temp = model.layer[0].bn1(temp)
+    print(temp)
+    print("model.layer.relu1" + "*" * 200)
+    temp = model.layer[0].relu(temp)
+    print(temp)
     pred_y = model(test_x)
     print(pred_y.size())
-    # print(pred_y)
+    print(pred_y)
 else:
     optimizer = optim.SGD(model.parameters(), lr=0.001)
     # for k,v in model.state_dict().items():

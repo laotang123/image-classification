@@ -50,7 +50,7 @@ def format_name(name):
 #   sys.exit()
 # model_path = "./sgd1-1-ao_resnet-lr0.5-2019-08-15-11_04_47.502572checkpoint.pth.tar"
 # res_path = "./data/ao_resnet20.dat"
-model_path = "residual.pth"
+model_path = "./pth/residual.pth"
 res_path = "./data/residual.dat"
 # model = torch.load(
 #     model_path,
