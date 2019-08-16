@@ -1,0 +1,163 @@
+{
+    "operator": [
+        {
+            "name": "conv1",
+            "type": "Conv2D",
+            "input": [
+                "input"
+            ],
+            "output": [
+                "conv1"
+            ],
+            "param": {
+                "input_size": 3,
+                "output_size": 3,
+                "kernel_size": 3,
+                "stride": 1,
+                "padding": 1,
+                "bias": false
+            }
+        },
+        {
+            "name": "bn1",
+            "type": "BatchNorm2D",
+            "input": [
+                "conv1"
+            ],
+            "output": [
+                "bn1"
+            ],
+            "param": {
+                "input_size": 3,
+                "output_size": 3
+            }
+        },
+        {
+            "name": "leakyrelu",
+            "type": "LeakyReLU",
+            "input": [
+                "bn1"
+            ],
+            "output": [
+                "leakyrelu"
+            ]
+        },
+        {
+            "name": "layer.0.conv1",
+            "type": "Conv2D",
+            "input": [
+                "leakyrelu"
+            ],
+            "output": [
+                "layer.0.conv1"
+            ],
+            "param": {
+                "input_size": 3,
+                "output_size": 6,
+                "kernel_size": 3,
+                "stride": 2,
+                "padding": 1,
+                "bias": false
+            }
+        },
+        {
+            "name": "layer.0.bn1",
+            "type": "BatchNorm2D",
+            "input": [
+                "layer.0.conv1"
+            ],
+            "output": [
+                "layer.0.bn1"
+            ],
+            "param": {
+                "input_size": 3,
+                "output_size": 3
+            }
+        },
+        {
+            "name": "layer.0.relu1",
+            "type": "ReLU",
+            "input": [
+                "layer.0.bn1"
+            ],
+            "output": [
+                "layer.0.relu"
+            ]
+        },
+        {
+            "name": "layer.0.conv2",
+            "type": "Conv2D",
+            "input": [
+                "layer.0.relu1"
+            ],
+            "output": [
+                "layer.0.conv2"
+            ],
+            "param": {
+                "input_size": 6,
+                "output_size": 6,
+                "kernel_size": 3,
+                "stride": 1,
+                "padding": 1,
+                "bias": false
+            }
+        },
+        {
+            "name": "layer.0.bn2",
+            "type": "BatchNorm2D",
+            "input": [
+                "layer.0.conv2"
+            ],
+            "output": [
+                "layer.0.bn2"
+            ],
+            "param": {
+                "input_size": 6,
+                "output_size": 6
+            }
+        },
+        {
+            "name": "layer.0.downsample.0",
+            "type": "Conv2D",
+            "input": [
+                "leakyrelu"
+            ],
+            "output": [
+                "layer.0.downsample.0"
+            ],
+            "param": {
+                "input_size": 3,
+                "output_size": 6,
+                "kernel_size": 1,
+                "stride": 2,
+                "padding": 1,
+                "bias": false
+            }
+        },
+        {
+            "name": "layer.0.downsample.1",
+            "type": "BatchNorm2D",
+            "input": [
+                "layer.0.downsample.0"
+            ],
+            "output": [
+                "layer.0.downsample.1"
+            ],
+            "param": {
+                "input_size": 6,
+                "output_size": 6
+            }
+        },
+        {
+            "name": "layer.0.relu2",
+            "type": "ReLU",
+            "input": [
+                "layer.0.bn2",
+                "layer.0.downsample.1"
+            ],
+            "output": [
+                "output"
+            ]
+        }
+    ]
+}
