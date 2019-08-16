@@ -118,5 +118,8 @@ venv.bak/
 *.dat
 *.tif
 *.tar
+*.jpg
+*.tar
+*.pdf
 
 
