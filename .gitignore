@@ -120,5 +120,6 @@ venv.bak/
 *.jpg
 *.tar
 *.pdf
+*.dat
 
 
