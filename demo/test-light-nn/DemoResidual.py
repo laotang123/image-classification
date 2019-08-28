@@ -9,7 +9,7 @@ import numpy as np
 # TODO layer0的卷积层输出结果不对！
 # 一 数据
 train_x = torch.rand(size=[10, 3, 8, 8])
-train_y = torch.rand(size=[10, 6, 4, 4])
+train_y = torch.rand(size=[10, 16, 8, 8])
 np.random.seed(18)
 temp_x = [[1, 2, 3, 4, 5, 6, 7, 8],
           [-1, -2, -3, -4, -5, -6, -7, -8],
@@ -56,7 +56,6 @@ class BasicBlock(nn.Module):  # 基本模块
 
         if self.downsample is not None:
             residual = self.downsample(x)
-
         out += residual
         out = self.relu(out)
 
@@ -73,12 +72,14 @@ class ResNet(nn.Module):
 
         block = BasicBlock
 
-        self.inplanes = 3
-        self.conv1 = nn.Conv2d(3, 3, kernel_size=3, padding=1,
+        self.inplanes = 16
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1,
                                bias=False)
-        self.bn1 = nn.BatchNorm2d(3)
+        self.bn1 = nn.BatchNorm2d(16)
         self.relu = nn.LeakyReLU(inplace=True)
-        self.layer = self._make_layer(block, 6, n, stride=2)
+
+        self.layer1 = self._make_layer(block, 16, n)
+        # self.layer2 = self._make_layer(block, 32, n, stride=2)
         # for m in self.modules():
         #     if isinstance(m,nn.Conv2d):
         #         nn.init.constant_(m.weight,1.0)
@@ -105,43 +106,45 @@ class ResNet(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)  # 32x32
 
-        x = self.layer(x)  # 32x32
+        x = self.layer1(x)  # 32x32
+        # x = self.layer2(x)
         return x
 
 
 # 三 优化器，损失函数
 is_evaluate = True
-model = ResNet(8)
+model = ResNet(20)
 if is_evaluate:
-    model.load_state_dict(torch.load("./pth/residual.pth"))
+    model.load_state_dict(torch.load("./pth/residual1.pth"))
     # test_x = torch.Tensor(np.random.randint(1,9,(1,10,3,3)))
     # for k, v in torch.load("./pth/residual.pth").items():
     #     print(k)
     # print(test_x)
     model.eval()
+    print(model.conv1.weight.size())
     # print(model.conv1(test_x).size())
-    print("model.conv1" + "*" * 200)
-    temp = model.conv1(test_x)
-    print(temp)
-    print("model.bn1" + "*" * 200)
-    temp = model.bn1(temp)
-    print(temp)
-    print("model.relu" + "*" * 200)
-    temp = model.relu(temp)
-    print(temp)
-    print(model.layer)
-    print("model.layer.conv1" + "*" * 200)
-    temp = model.layer[0].conv1(temp)
-    print(temp)
-    print("model.layer.bn1" + "*" * 200)
-    temp = model.layer[0].bn1(temp)
-    print(temp)
-    print("model.layer.relu1" + "*" * 200)
-    temp = model.layer[0].relu(temp)
-    print(temp)
-    pred_y = model(test_x)
-    print(pred_y.size())
-    print(pred_y)
+    # print("model.conv1" + "*" * 200)
+    # temp = model.conv1(test_x)
+    # print(temp)
+    # print("model.bn1" + "*" * 200)
+    # temp = model.bn1(temp)
+    # print(temp)
+    # print("model.relu" + "*" * 200)
+    # temp = model.relu(temp)
+    # print(temp)
+    # print(model.layer)
+    # print("model.layer.conv1" + "*" * 200)
+    # temp = model.layer[0].conv1(temp)
+    # print(temp)
+    # print("model.layer.bn1" + "*" * 200)
+    # temp = model.layer[0].bn1(temp)
+    # print(temp)
+    # print("model.layer.relu1" + "*" * 200)
+    # temp = model.layer[0].relu(temp)
+    # print(temp)
+    # pred_y = model(test_x)
+    # print(pred_y.size())
+    # print(pred_y)
 else:
     optimizer = optim.SGD(model.parameters(), lr=0.001)
     # for k,v in model.state_dict().items():
@@ -164,4 +167,4 @@ else:
     # 五 模型保存
     # [0.535030,0.461349,0.541562,0.550206,0.534486,]
     # import io
-    torch.save(model.state_dict(), "./residual.pth")
+    # torch.save(model.state_dict(), "./pth/residual1.pth")

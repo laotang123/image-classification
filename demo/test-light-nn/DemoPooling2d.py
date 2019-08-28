@@ -41,7 +41,7 @@ class Net(nn.Module):
 is_evaluate = True
 model = Net()
 if is_evaluate:
-    model.load_state_dict(torch.load("./pooling2d.pth"))
+    model.load_state_dict(torch.load("./pth/pooling2d.pth"))
     # test_x = torch.Tensor(np.random.randint(1,9,(1,10,3,3)))
     # for k,v in torch.load("leakyrelu.pth").items():
     #    print(v)
@@ -74,4 +74,4 @@ else:
     # 五 模型保存
     # [0.535030,0.461349,0.541562,0.550206,0.534486,]
     # import io
-    torch.save(model.state_dict(),"./pooling2d.pth")
+    torch.save(model.state_dict(),"./pth/pooling2d.pth")

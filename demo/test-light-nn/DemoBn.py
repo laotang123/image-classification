@@ -10,7 +10,7 @@ import numpy as np
 # 一 数据
 train_x = torch.rand(size=[10,3,8,8])
 train_y = torch.rand(size=[10,3,8,8])
-np.random.seed(18)
+# np.random.seed(18)
 temp_x = [[1,2,3,4,5,6,7,8],
           [-1,-2,-3,-4,-5,-6,-7,-8],
           [1,2,3,4,5,6,7,8],
@@ -38,20 +38,20 @@ class Net(nn.Module):
 is_evaluate = True
 model = Net()
 if is_evaluate:
-    model.load_state_dict(torch.load("./batchnorm2d.pth"))
+    model.load_state_dict(torch.load("./pth/batchnorm2d.pth"))
     # test_x = torch.Tensor(np.random.randint(1,9,(1,10,3,3)))
-    for k,v in torch.load("batchnorm2d.pth").items():
-       print(k,v)
+    # for k,v in torch.load("./pth/batchnorm2d.pth").items():
+    #    print(k,v)
     # print(test_x)
     mean = test_x.mean(dim=[2, 3], keepdim=True)
     var = test_x.var(dim=[2, 3], keepdim=True)
-    print(model.bn.running_mean)
-    _out = (test_x - model.bn.running_mean.view(1, 3, 1, 1)) / torch.sqrt(
-        model.bn.running_var.view(1, 3, 1, 1) + model.bn.eps)
-    _output = model.bn.weight.view(mean.size()) * _out + model.bn.bias.view(mean.size())
-    print(_output)
+    # print(model.bn.running_mean)
+    # _out = (test_x - model.bn.running_mean.view(1, 3, 1, 1)) / torch.sqrt(
+    #     model.bn.running_var.view(1, 3, 1, 1) + model.bn.eps)
+    # _output = model.bn.weight.view(mean.size()) * _out + model.bn.bias.view(mean.size())
+    # print(_output)
     model.eval()
-    print(model.bn.eps)
+    # print(model.bn.eps)
     pred_y = model(test_x)
     print(pred_y)
 else:
@@ -69,13 +69,13 @@ else:
         if i ==0:
             print(output.size())
         loss = criterion(output, train_y)
-        # optimizer.zero_grad()
-        # loss.backward()
-        # optimizer.step()
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
         # print("Loss:{}".format(loss))
     # 五 模型保存
     # [0.535030,0.461349,0.541562,0.550206,0.534486,]
     # import io
-    torch.save(model.state_dict(),"./batchnorm2d.pth")
+    torch.save(model.state_dict(),"./pth/batchnorm2d.pth")
 

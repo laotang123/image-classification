@@ -9,7 +9,7 @@ import numpy as np
 # TODO
 # 一 数据
 train_x = torch.rand(size=[10,3,8,8])
-train_y = torch.rand(size=[10,3,4,4])
+train_y = torch.rand(size=[10,3,8,8])
 np.random.seed(18)
 temp_x = [[1,2,3,4,5,6,7,8],
           [-1,-2,-3,-4,-5,-6,-7,-8],
@@ -26,18 +26,11 @@ print(test_x.size())
 class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
-        self.conv2d = nn.Conv2d(in_channels=3,out_channels=3,kernel_size=3,bias=True,stride=2,padding=1)
-
-        # for m in self.modules():
-        #     if isinstance(m,nn.Conv2d):
-        #         nn.init.constant_(m.weight,1.0)
-        #         nn.init.constant_(m.bias,1.0)
-        # self.conv2d2 = nn.Conv2d(in_channels=3,out_channels=3,kernel_size=3,bias=True,stride=1,padding=1)
-        # nn.BatchNorm2d()
-        # for m in self.modules():
-        #     if isinstance(m,nn.Conv2d):
-        #         nn.init.constant_(m.weight,1.0)
-        #         nn.init.constant_(m.bias,1.0)
+        self.conv2d = nn.Conv2d(in_channels=3,out_channels=3,kernel_size=3,bias=True,stride=1,padding=1)
+        for m in self.modules():
+            if isinstance(m,nn.Conv2d):
+                nn.init.constant_(m.weight,1.0)
+                nn.init.constant_(m.bias,0.0)
     def forward(self, x):
         out = self.conv2d(x)
         # out = self.conv2d2(out)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2019/8/16 18:06
+# @Time    : 2019/8/27 11:39
 # @Author  : ljf
 from __future__ import absolute_import
 
@@ -51,14 +51,6 @@ class BasicBlock(nn.Module):  # 基本模块
 
     def forward(self, x):
         residual = x
-        # global id
-        # if id == 6:
-        #     print(x.size())
-        #     print(x.detach().numpy())
-        #     print(x.size())
-        #     import time
-        #     time.sleep(1000)
-        # id += 1
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
@@ -67,53 +59,10 @@ class BasicBlock(nn.Module):  # 基本模块
         if self.downsample is not None:
             residual = self.downsample(x)
         out += residual
-        # global id
-        # if id == 5:
-        #     print(out.size())
-        #     print(out.detach().numpy())
-        #     print(out.size())
-        #     import time
-        #     time.sleep(1000)
-        # id += 1
         out = self.relu(out)
 
         return out
 
-
-class Bottleneck(nn.Module):
-    expansion = 4
-
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
-        super(Bottleneck, self).__init__()
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                               padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(planes)
-        self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(planes * 4)
-        self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-
-    def forward(self, x):
-        residual = x
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu(out)
-
-        out = self.conv3(out)
-        out = self.bn3(out)
-
-        if self.downsample is not None:
-            residual = self.downsample(x)
-        out += residual
-        out = self.relu(out)
-        return out
 
 
 class ResNet(nn.Module):
@@ -124,7 +73,7 @@ class ResNet(nn.Module):
         assert (depth - 2) % 6 == 0, 'depth should be 6n+2'
         n = (depth - 2) // 6
 
-        block = Bottleneck if depth >= 44 else BasicBlock
+        block = BasicBlock
 
         self.inplanes = 16
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1,
@@ -132,13 +81,13 @@ class ResNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(16)
         self.relu = nn.LeakyReLU(inplace=True)
 
-        self.layer1 = self._make_layer(block, 16, n)
+        self.layer1 = self._make_layer(block, 16, n, stride=2)
         self.layer2 = self._make_layer(block, 32, n, stride=2)
-        self.layer3 = self._make_layer(block, 64, n, stride=2)
+        # self.layer3 = self._make_layer(block, 64, n, stride=2)
         # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.maxpool = nn.AdaptiveMaxPool2d((1, 1))
-        self.bn2 = nn.BatchNorm2d(64 * block.expansion)
-        self.fc = nn.Linear(64 * block.expansion, num_classes)
+        self.bn2 = nn.BatchNorm2d(32 * block.expansion)
+        self.fc = nn.Linear(32 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -171,7 +120,7 @@ class ResNet(nn.Module):
 
         x = self.layer1(x)  # 32x32
         x = self.layer2(x)  # 16x16
-        x = self.layer3(x)  # 8x8
+        # x = self.layer3(x)  # 8x8
         # x = self.avgpool(x)
         x = self.maxpool(x)
         # print(x.detach().numpy())
@@ -214,7 +163,7 @@ model = ResNet(20, 7)
 
 
 if is_evaluate:
-    checkpoint = torch.load("./pth/sgd1-1-ao_resnet-lr0.5-2019-08-15-11_04_47.502572checkpoint.pth.tar",map_location="cpu")["state_dict"]
+    checkpoint = torch.load("./pth/sgd-depth14-ao_resnet-lr0.5-2019-08-27-09_37_09.978241checkpoint.pth.tar",map_location="cpu")["state_dict"]
     # print(checkpoint["state_dict"])
     state_dict = OrderedDict()
     # print(checkpoint["state_dict"]["module.conv1.weight"])
@@ -237,7 +186,7 @@ if is_evaluate:
     ])
     img_path = "D:\\git-projects\\ljf-git\\image-classification\\demo\\data\\enhance-classification-7-730\\ddust\\ddust1-.tif"
     image = Image.open(img_path).convert("RGB")
-    print(transform_test(image).numpy()[0][0:100])
+    # print(transform_test(image).numpy()[0][0:100])
     img = torch.unsqueeze(transform_test(image), 0)
     model.eval()
     model(img)

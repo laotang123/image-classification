@@ -50,8 +50,10 @@ def format_name(name):
 #   sys.exit()
 # model_path = "./sgd1-1-ao_resnet-lr0.5-2019-08-15-11_04_47.502572checkpoint.pth.tar"
 # res_path = "./data/ao_resnet20.dat"
-model_path = "./pth/residual.pth"
-res_path = "./data/residual.dat"
+# model_path = "./pth/sgd1-1-ao_resnet-lr0.5-2019-08-15-11_04_47.502572checkpoint.pth.tar"
+# model_path = "./pth/sgd-depth14-ao_resnet-lr0.5-2019-08-27-09_37_09.978241checkpoint.pth.tar"
+model_path = "./pth/conv2d.pth"
+res_path = "./data/conv2d.dat"
 # model = torch.load(
 #     model_path,
 #     map_location=lambda storage,
@@ -136,9 +138,11 @@ print("#operator: {}".format(len(ops)))
 print(ops)
 temp = [name.replace("\0","") for name in format_weight_name]
 for n in temp:
-    if n.startswith("layer1.0"):
-        print(n)
-    elif n.startswith("layer2.0"):
+    # if n.startswith("layer1.0"):
+    #     print(n)
+    # elif n.startswith("layer2.0"):
+    if n.startswith("bn2"):
+
         print(n)
 # for i in range(len(ops)):
 #   print( ops[i])
