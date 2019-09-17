@@ -39,31 +39,22 @@ is_evaluate = True
 model = Net()
 if is_evaluate:
     model.load_state_dict(torch.load("./pth/batchnorm2d.pth"))
-    # test_x = torch.Tensor(np.random.randint(1,9,(1,10,3,3)))
-    # for k,v in torch.load("./pth/batchnorm2d.pth").items():
-    #    print(k,v)
-    # print(test_x)
     mean = test_x.mean(dim=[2, 3], keepdim=True)
     var = test_x.var(dim=[2, 3], keepdim=True)
     # print(model.bn.running_mean)
-    # _out = (test_x - model.bn.running_mean.view(1, 3, 1, 1)) / torch.sqrt(
-    #     model.bn.running_var.view(1, 3, 1, 1) + model.bn.eps)
-    # _output = model.bn.weight.view(mean.size()) * _out + model.bn.bias.view(mean.size())
-    # print(_output)
+    _out = (test_x - model.bn.running_mean.view(1, 3, 1, 1)) / torch.sqrt(
+        model.bn.running_var.view(1, 3, 1, 1) + model.bn.eps)
+    _output = model.bn.weight.view(mean.size()) * _out + model.bn.bias.view(mean.size())
+    print(_output)
     model.eval()
     # print(model.bn.eps)
     pred_y = model(test_x)
     print(pred_y)
 else:
     optimizer = optim.SGD(model.parameters(), lr=0.001)
-    # for k,v in model.state_dict().items():
-    #     print(type(k))
-    #     print(v.size())
-    print(sum([p.numel() for p in model.parameters()]))
     criterion = nn.MSELoss()
     # 四 迭代数据
     for i in range(20):
-        # print("***Epoch:{}***".format(i))
 
         output = model(train_x)
         if i ==0:
@@ -73,9 +64,7 @@ else:
         loss.backward()
         optimizer.step()
 
-        # print("Loss:{}".format(loss))
     # 五 模型保存
-    # [0.535030,0.461349,0.541562,0.550206,0.534486,]
-    # import io
+
     torch.save(model.state_dict(),"./pth/batchnorm2d.pth")
 

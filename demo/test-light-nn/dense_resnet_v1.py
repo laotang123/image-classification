@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2019/8/27 11:39
+# @Time    : 2019/8/29 11:09
 # @Author  : ljf
 from __future__ import absolute_import
 
@@ -43,10 +43,14 @@ class BasicBlock(nn.Module):  # 基本模块
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
-        self.conv1 = conv3x3(inplanes, planes, stride)
+        self.conv1 = conv3x3(inplanes, planes // 4, stride)
+        self.nin1 = nn.Conv2d(planes // 4, planes // 4, 1,bias=False)
+        self.conv2 = conv3x3(planes // 4, planes)
         self.bn1 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv3x3(planes, planes)
+        self.conv3 = conv3x3(planes, planes // 4)
+        self.nin2 = nn.Conv2d(planes // 4, planes // 4, 1,bias=False)
+        self.conv4 = conv3x3(planes // 4, planes)
         self.bn2 = nn.BatchNorm2d(planes)
         self.downsample = downsample
         self.stride = stride
@@ -54,9 +58,14 @@ class BasicBlock(nn.Module):  # 基本模块
     def forward(self, x):
         residual = x
         out = self.conv1(x)
+        out = self.nin1(out)
+        out = self.conv2(out)
         out = self.bn1(out)
         out = self.relu(out)
-        out = self.conv2(out)
+
+        out = self.conv3(out)
+        out = self.nin2(out)
+        out = self.conv4(out)
         out = self.bn2(out)
         if self.downsample is not None:
             residual = self.downsample(x)
@@ -73,7 +82,7 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         # Model type specifies number of layers for CIFAR-10 model
         assert (depth - 2) % 6 == 0, 'depth should be 6n+2'
-        n = (depth - 2) // 6
+        n = 2
 
         block = BasicBlock
 
@@ -137,7 +146,7 @@ model = ResNet(20, 7)
 
 
 if is_evaluate:
-    checkpoint = torch.load("./pth/sgd-depth14-ao_resnet-lr0.5-2019-08-27-09_37_09.978241checkpoint.pth.tar",map_location="cpu")["state_dict"]
+    checkpoint = torch.load("./pth/dense-resnet-v1-dense_resnet-lr0.5-2019-08-29-13_58_49.888910checkpoint.pth.tar",map_location="cpu")["state_dict"]
     # print(checkpoint["state_dict"])
     state_dict = OrderedDict()
     # print(checkpoint["state_dict"]["module.conv1.weight"])
@@ -158,14 +167,19 @@ if is_evaluate:
     model.eval()
     start = time.time()
     total = 0
+    batch_size = 1
     for id,path in enumerate(glob.glob(img_paths),start=1):
         image = Image.open(path).convert("RGB")
-        # print(transform_test(image).numpy()[0][0:100])
         img = torch.unsqueeze(transform_test(image), 0)
         out = model(img)
         if torch.argmax(out).item() == 1:
             total += 1
         # print(model(img))
+        if id <= batch_size:
+            print(path)
+            print(out)
+        else:
+            break
         if id%50 == 0:
             end = time.time()
             print("测试图片：{}，平均时间：{},accuracy:{}".format(id,(end-start)/id,total/id))
@@ -190,8 +204,5 @@ else:
         # loss.backward()
         # optimizer.step()
 
-        # print("Loss:{}".format(loss))
     # 五 模型保存
-    # [0.535030,0.461349,0.541562,0.550206,0.534486,]
-    # import io
     # torch.save(model.state_dict(), "./pth/demo_resnet20.pth")

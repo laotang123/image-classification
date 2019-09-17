@@ -29,7 +29,7 @@ def get_mean_and_std(dataset):
 if __name__ == "__main__":
 
     dataloader = Classification_dataset
-    dataset_path = "./data/enhance-classification-8-527"
+    dataset_path = "./data/enhance-magnetic-6-902"
     trainset = dataloader(
         root=dataset_path,
         train=0,

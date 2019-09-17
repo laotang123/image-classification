@@ -31,6 +31,7 @@ def gen_data(img_paths):
         img_list = transform_test(image).numpy().flatten().tolist()
         if id == batch_size:
             break
+        # print(img_path)
         val_arr.fromlist(img_list)
     # size_arr.append(batch_size)
     # size_arr.append(len(img_list))

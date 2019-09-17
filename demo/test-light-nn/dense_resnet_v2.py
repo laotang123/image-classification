@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2019/8/27 11:39
+# @Time    : 2019/8/29 15:18
 # @Author  : ljf
 from __future__ import absolute_import
 
@@ -14,10 +14,10 @@ from PIL import Image
 from torchvision import transforms
 import glob
 
-np.set_printoptions(suppress=True,threshold=np.inf)
+np.set_printoptions(suppress=True, threshold=np.inf)
 # 一 数据
 train_x = torch.rand(size=[10, 3, 8, 8])
-train_y = torch.randint(low=0,high=7,size=[10])
+train_y = torch.randint(low=0, high=7, size=[10])
 np.random.seed(18)
 temp_x = [[1, 2, 3, 4, 5, 6, 7, 8],
           [-1, -2, -3, -4, -5, -6, -7, -8],
@@ -32,6 +32,8 @@ test_x = torch.Tensor(temp_y)
 print(test_x.size())
 id = 1
 # print(test_x)
+
+
 def conv3x3(in_planes, out_planes, stride=1):
     "3x3 convolution with padding"
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
@@ -43,20 +45,30 @@ class BasicBlock(nn.Module):  # 基本模块
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
-        self.conv1 = conv3x3(inplanes, planes, stride)
+        self.nin1 = nn.Conv2d(inplanes, planes // 4, 1, stride,bias=False)
+        self.conv1 = conv3x3(planes // 4, planes // 4)
+        self.nin2 = nn.Conv2d(planes // 4, planes, 1,bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv3x3(planes, planes)
+
+        self.nin3 = nn.Conv2d(planes, planes // 4, 1,bias=False)
+        self.conv2 = conv3x3(planes // 4, planes // 4)
+        self.nin4 = nn.Conv2d(planes // 4, planes, 1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
         self.downsample = downsample
         self.stride = stride
 
     def forward(self, x):
         residual = x
-        out = self.conv1(x)
+        out = self.nin1(x)
+        out = self.conv1(out)
+        out = self.nin2(out)
         out = self.bn1(out)
         out = self.relu(out)
+
+        out = self.nin3(out)
         out = self.conv2(out)
+        out = self.nin4(out)
         out = self.bn2(out)
         if self.downsample is not None:
             residual = self.downsample(x)
@@ -66,14 +78,13 @@ class BasicBlock(nn.Module):  # 基本模块
         return out
 
 
-
 class ResNet(nn.Module):
 
     def __init__(self, depth, num_classes=1000):
         super(ResNet, self).__init__()
         # Model type specifies number of layers for CIFAR-10 model
         assert (depth - 2) % 6 == 0, 'depth should be 6n+2'
-        n = (depth - 2) // 6
+        n = 2
 
         block = BasicBlock
 
@@ -137,12 +148,14 @@ model = ResNet(20, 7)
 
 
 if is_evaluate:
-    checkpoint = torch.load("./pth/sgd-depth14-ao_resnet-lr0.5-2019-08-27-09_37_09.978241checkpoint.pth.tar",map_location="cpu")["state_dict"]
+    checkpoint = torch.load(
+        "./pth/dense-resnet-v1-dense_resnet-lr0.5-2019-08-28-18_13_36.483038checkpoint.pth.tar",
+        map_location="cpu")["state_dict"]
     # print(checkpoint["state_dict"])
     state_dict = OrderedDict()
     # print(checkpoint["state_dict"]["module.conv1.weight"])
     for k in checkpoint.keys():
-        new_k = k.replace("module.","")
+        new_k = k.replace("module.", "")
         state_dict[new_k] = checkpoint[k]
     model.load_state_dict(state_dict)
     # model.load_state_dict(torch.load("./pth/demo_resnet20.pth"))
@@ -158,19 +171,26 @@ if is_evaluate:
     model.eval()
     start = time.time()
     total = 0
-    for id,path in enumerate(glob.glob(img_paths),start=1):
+    batch_size = 1000
+    for id, path in enumerate(glob.glob(img_paths), start=1):
         image = Image.open(path).convert("RGB")
-        # print(transform_test(image).numpy()[0][0:100])
+
         img = torch.unsqueeze(transform_test(image), 0)
         out = model(img)
         if torch.argmax(out).item() == 1:
             total += 1
         # print(model(img))
-        if id%50 == 0:
+        # if id <= batch_size:
+        #     print(path)
+        #     print(out)
+        # else:
+        #     break
+        if id % 50 == 0:
             end = time.time()
-            print("测试图片：{}，平均时间：{},accuracy:{}".format(id,(end-start)/id,total/id))
+            print("测试图片：{}，平均时间：{},accuracy:{}".format(
+                id, (end - start) / id, total / id))
     end = time.time()
-    print("平均时间：{}".format((end-start)/id))
+    print("平均时间：{}".format((end - start) / id))
 
 else:
     optimizer = optim.SGD(model.parameters(), lr=0.001)
@@ -190,8 +210,5 @@ else:
         # loss.backward()
         # optimizer.step()
 
-        # print("Loss:{}".format(loss))
     # 五 模型保存
-    # [0.535030,0.461349,0.541562,0.550206,0.534486,]
-    # import io
     # torch.save(model.state_dict(), "./pth/demo_resnet20.pth")

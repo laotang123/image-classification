@@ -10,17 +10,17 @@ def plot(paths,title,save_path):
     print(paths)
     plt.figure()
     plt.title(title)
-    color = ["#FF5733","#33FFBD","#33FF57","#FFBD33"]
+    color = ["#FF5733","#33FFBD","#FFBD33","#33FF57","#000000"]
+    legend = ["baseline","C2/4","C3/4"]
     for id,path in enumerate(paths):
         result = pd.read_csv(path, sep="\t")
         print(result)
-    # # print(result)
     # # print(result.iloc[:,2])
         lr, train_loss, train_acc, = result["Learning Rate"], result["Train Loss"], result["Train Acc"]
         val_loss, val_acc = result["Valid Loss"], result["Valid Acc"]
         x = np.arange(len(lr))
-        plt.plot(x, train_acc, color[id],label="lr={}".format(lr[0])+"train_acc")
-        plt.plot(x, val_acc, color[id], label="lr={}".format(lr[0]) + "val_acc")
+        plt.plot(x, train_acc, color[id],label="{}".format(legend[id])+"- train_acc")
+        plt.plot(x, val_acc, color[id], linestyle = "-.",label="{}".format(legend[id]) + "- val_acc")
     plt.legend(loc=4)
     plt.savefig(save_path)
     plt.show()
@@ -38,7 +38,8 @@ def plot(paths,title,save_path):
     # plt.legend(loc=1)
     # # plt.show()
 
-paths = glob.glob("./result/classification-8/optimizer/sgd/*.txt")
-plot(paths,"resnet20","result-sgd-lr.jpg")
+if __name__ == "__main__":
+    paths = glob.glob("./resultS/*.txt")
+    plot(paths, "learner-compare", "meta.jpg")
 
 

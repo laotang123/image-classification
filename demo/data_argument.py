@@ -48,18 +48,18 @@ parser.add_argument("--excursion", type=int, default=10,
 parser.add_argument(
     "--path",
     type=str,
-    default="./data/classification-8-729",
+    default="./data/cloth",
     help="original image path ")
 parser.add_argument(
     "--new_path",
     type=str,
-    default="./data/enhance-classification-8-729",
+    default="./data/enhance-cloth-21-904",
     help="")
-parser.add_argument("--max_num", type=int, default=2499,
+parser.add_argument("--max_num", type=int, default=499,
                     help="the maximum number of images")
-parser.add_argument("--min_num", type=int, default=2499,
+parser.add_argument("--min_num", type=int, default=499,
                     help="the minimum number of images")
-parser.add_argument("--img_format", type=str, default="tif",
+parser.add_argument("--img_format", type=str, default="jpg",
                     help="the minimum number of images")
 parser.add_argument(
     "--offset",
@@ -68,6 +68,7 @@ parser.add_argument(
     help="offset of translation")
 
 # extra argumentation
+parser.add_argument("--is_resize",type=str2bool,default="True",help="if image_size<480*480 resize")
 parser.add_argument(
     "--is_crop",
     type=str2bool,
@@ -214,6 +215,9 @@ class DataArgument(object):
             [self.x0 + dx, self.y0 + dy, self.x0 + dx + self.w, self.y0 + dy + self.h])
         return new_img
 
+    def ImageResize(self,image):
+
+        return image.resize((args.w,args.h))
     def ImgeRotate(self, img, angle, mode=Image.BICUBIC):
         """
         mode : Image.NEAREST,Image.BILINEAR,Image.BICUBIC,Image.ANTIALIAS
@@ -224,12 +228,19 @@ class DataArgument(object):
         xoff, yoff = np.random.randint(0, self.offset, 2)
         width, height = img.size
         offset_img = ImageChops.offset(img, xoff, yoff)
-        if np.random.randint(0, 2, 1):
+        choice = np.random.randint(0, 4, 1)
+        if choice == 0:
             offset_img.paste((0), (0, 0, xoff, height))
-            offset_img.paste((0), (0, 0, width, yoff))
-        else:
+            offset_img.paste((0), (xoff, 0, width, yoff))
+        elif choice == 1:
             offset_img.paste((0), (width - xoff, 0, width, height))
             offset_img.paste((0), (0, 0, width, yoff))
+        elif choice == 2:
+            offset_img.paste((0), (0, 0, xoff, height))
+            offset_img.paste((0), (xoff, height - yoff, width, height))
+        else:
+            offset_img.paste((0), (0, height - yoff, width, height))
+            offset_img.paste((0), (width - xoff, 0, width, height - yoff))
         return offset_img
 
     def ImageNoise(self):
@@ -288,12 +299,24 @@ def main(args):
             # print("正在处理第{}张图片".format(id))
             if args.is_crop:
             # 如果处理的图像是需要剪切的，则需要先剪切存储到新的文件夹
-                print("第{}张".format(id))
+                if id > args.max_num:
+                    break
+                print("图像剪切第{}张".format(id))
                 img = argument.RandomCrop(img)
                 argument.SaveImage(img, save_path.format("crop"))
                 id += 1
+
+            elif args.is_resize:
+                if id > args.max_num:
+                    break
+                print("图像放缩第{}张".format(id))
+                img = argument.ImageResize(img)
+                argument.SaveImage(img, save_path.format("resize"))
+                id += 1
             else:
-                print("第{}张".format(id))
+                if id > args.max_num:
+                    break
+                print("原始图像存储第{}张".format(id))
                 # 如果处理的图像是不需要剪切的，则先存储所有的原始图像，再对原始图像做处理，然后存储
                 argument.SaveImage(img, save_path.format(""))
                 id += 1
@@ -360,130 +383,3 @@ def main(args):
 
 if __name__ == '__main__':
     main(args)
-    # path = "data/binary"
-    # folders = os.listdir(path)
-    # print(folders)
-    # w = []
-    # h = []
-    # for folder in folders:
-    #
-    #     img_paths = glob.glob(os.path.join(path,folder, "*.bmp"))
-    #     for id ,img_path in enumerate(img_paths):
-    #         img = Image.open(img_path)
-    #         w.append(img.size[0])
-    #         h.append(img.size[1])
-    #         resize_img = img.resize((480,480),Image.ANTIALIAS)
-    #         resize_img.show()
-    #         folder_path = "data/binary-two/{}".format(folder)
-    #         new_img_path = folder_path+"/"+str(id)+".tif"
-    #         if not os.path.exists(folder_path):
-    #             os.mkdir(folder_path)
-    #         # print(new_img_path)
-    #         # resize_img.save(new_img_path)
-    #         print(resize_img.size)
-    # print(sum(w)/len(w),sum(h)/len(h))
-            # print(img.shape)
-            # cv2.imshow("img", img)
-            # cv2.waitKey()
-            # cv2.destroyAllWindows()
-    # argument = DataArgument(args)
-    # folder_list = os.listdir(args.path)
-    #
-    # for folder in folder_list:
-    #     if folder == "良品":
-    #         n = 0
-    #         for img_path in glob.glob(os.path.join(args.path,folder,"*.tif")):
-    #             if n >= 250:
-    #                 break
-    #             else:
-    #                 # print(img_path
-    #                 img_name = img_path.split("\\")[-1]
-    #                 img = Image.open(img_path)
-    #                 img = argument.RandomCrop(img)
-    #                 img.save(os.path.join(args.new_path,folder,img_name))
-    #                 n +=1
-    #         print("{}图片共{}张".format(folder,n))
-    #     elif folder == "点":
-    #         n = 0
-    #         for img_path in glob.glob(os.path.join(args.path,folder,"*.tif")):
-    #             if n >= 100:
-    #                 break
-    #             else:
-    #                 img_name = img_path.split("\\")[-1]
-    #                 img = Image.open(img_path)
-    #                 img = argument.RandomCrop(img)
-    #                 img.save(os.path.join(args.new_path, folder, img_name))
-    #                 n += 1
-    #         print("{}图片共{}张".format(folder, n))
-    #     elif folder == "划伤":
-    #         n = 0
-    #         for img_path in glob.glob(os.path.join(args.path,folder,"*.tif")):
-    #             if n >= 300:
-    #                 break
-    #             else:
-    #                 img_name = img_path.split("\\")[-1]
-    #                 img = Image.open(img_path)
-    #                 img = argument.RandomCrop(img)
-    #                 img.save(os.path.join(args.new_path, folder, img_name))
-    #                 n += 1
-    #         print("{}图片共{}张".format(folder, n))
-    #     elif folder == "丝印不良":
-    #         n = 0
-    #         for img_path in glob.glob(os.path.join(args.path,folder,"*.tif")):
-    #             if n >= 300:
-    #                 break
-    #             else:
-    #                 img_name = img_path.split("\\")[-1]
-    #                 img = Image.open(img_path)
-    #                 img = argument.RandomCrop(img)
-    #                 img.save(os.path.join(args.new_path, "丝印", img_name))
-    #                 n += 1
-    #         print("{}图片共{}张".format(folder, n))
-    #     elif folder == "毛丝":
-    #         n = 0
-    #         for img_path in glob.glob(os.path.join(args.path,folder,"*.tif")):
-    #             if n >= 300:
-    #                 break
-    #             else:
-    #                 img_name = img_path.split("\\")[-1]
-    #                 img = Image.open(img_path)
-    #                 img = argument.RandomCrop(img)
-    #                 img.save(os.path.join(args.new_path, folder, img_name))
-    #                 n += 1
-    #         print("{}图片共{}张".format(folder, n))
-    #     elif folder == "脏污":
-    #         n = 0
-    #         for img_path in glob.glob(os.path.join(args.path,folder,"*.tif")):
-    #             if n >= 100:
-    #                 break
-    #             else:
-    #                 img_name = img_path.split("\\")[-1]
-    #                 img = Image.open(img_path)
-    #                 img = argument.RandomCrop(img)
-    #                 img.save(os.path.join(args.new_path, folder, img_name))
-    #                 n += 1
-    #         print("{}图片共{}张".format(folder, n))
-    # path = "./data/SaveChip/*.tif"
-    # for img_path in glob.glob(path):
-    #     img_name = img_path.split("\\")[-1]
-    #     if img_name[0] == "点":
-    #         img = Image.open(img_path)
-    #         img.save("./data/classification-7-424/点/{}".format(img_name))
-    #     elif img_name[:2] == "丝印":
-    #         img = Image.open(img_path)
-    #         img.save("./data/classification-7-424/丝印/{}".format(img_name))
-    #     elif img_name[:2] == "划伤":
-    #         img = Image.open(img_path)
-    #         img.save("./data/classification-7-424/划伤/{}".format(img_name))
-    #     elif img_name[:2] == "断胶":
-    #         img = Image.open(img_path)
-    #         img.save("./data/classification-7-424/断胶/{}".format(img_name))
-    #     elif img_name[:2] == "毛丝":
-    #         img = Image.open(img_path)
-    #         img.save("./data/classification-7-424/毛丝/{}".format(img_name))
-    #     elif img_name[:2] == "粉尘":
-    #         img = Image.open(img_path)
-    #         img.save("./data/classification-7-424/粉尘/{}".format(img_name))
-    #     elif img_name[:2] == "脏污":
-    #         img = Image.open(img_path)
-    #         img.save("./data/classification-7-424/脏污/{}".format(img_name))

@@ -52,13 +52,14 @@ def format_name(name):
 # res_path = "./data/ao_resnet20.dat"
 # model_path = "./pth/sgd1-1-ao_resnet-lr0.5-2019-08-15-11_04_47.502572checkpoint.pth.tar"
 # model_path = "./pth/sgd-depth14-ao_resnet-lr0.5-2019-08-27-09_37_09.978241checkpoint.pth.tar"
-model_path = "./pth/conv2d.pth"
-res_path = "./data/conv2d.dat"
-# model = torch.load(
-#     model_path,
-#     map_location=lambda storage,
-#     loc: storage)["state_dict"]
-model = torch.load(model_path, map_location=lambda storage, loc : storage)
+model_path = "./pth/dense-resnet-v3-dense_resnet-lr0.5-2019-08-29-17_35_46.247762checkpoint.pth.tar"
+# model_path = "./pth/conv2d.pth"
+res_path = "./data/dense_resnet_v3.dat"
+model = torch.load(
+    model_path,
+    map_location=lambda storage,
+    loc: storage)["state_dict"]
+# model = torch.load(model_path, map_location=lambda storage, loc : storage)
 print(type(model))
 print(sum([value.numel() for value in model.values()]))
 

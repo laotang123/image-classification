@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2019/8/27 11:39
+# @Time    : 2019/8/29 11:20
 # @Author  : ljf
 from __future__ import absolute_import
 
@@ -73,7 +73,7 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         # Model type specifies number of layers for CIFAR-10 model
         assert (depth - 2) % 6 == 0, 'depth should be 6n+2'
-        n = (depth - 2) // 6
+        n = 2
 
         block = BasicBlock
 

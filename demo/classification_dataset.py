@@ -29,7 +29,7 @@ def gene_data_txt(dataset_path):
     val_data = []
     folder_list = os.listdir(dataset_path)
     for folder in folder_list:
-        img_paths = glob.glob(os.path.join(dataset_path, folder, "*.tif"))
+        img_paths = glob.glob(os.path.join(dataset_path, folder, "*.jpg"))
         n = 0
         for id, img_path in enumerate(img_paths):
             if id < len(img_paths) * 0.1:
