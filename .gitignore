@@ -121,5 +121,10 @@ venv.bak/
 *.tar
 *.pdf
 *.dat
+*.rar
+
+# data
+demo/data
+
 
 
